@@ -18,10 +18,8 @@ function App() {
     try {
       setBackendStatus(prev => ({ ...prev, loading: true, message: 'Connecting...' }));
       
-      // Replace with your backend URL when deployed
-      const backendUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://your-backend-url.com' 
-        : 'http://localhost:5000';
+      // Use Vite environment variables
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       
       const response = await fetch(`${backendUrl}/api/status`);
       
