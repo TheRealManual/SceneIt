@@ -19,7 +19,7 @@ function App() {
       setBackendStatus(prev => ({ ...prev, loading: true, message: 'Connecting...' }));
       
       // Use Vite environment variables
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       
       const response = await fetch(`${backendUrl}/api/status`);
       
