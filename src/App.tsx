@@ -328,9 +328,11 @@ function App() {
   };
 
   const handleSubmitPreferences = async () => {
-    console.log('Movie Preferences:', preferences);
+    console.log('%c🎬 FINDING MOVIES - START', 'background: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+    console.log('%c📋 User Preferences:', 'background: #2196F3; color: white; padding: 5px; font-weight: bold;');
+    console.log(JSON.stringify(preferences, null, 2));
     
-    // Save preferences before navigating
+    // Save preferences before searching
     if (user) {
       try {
         await userService.updatePreferences({
@@ -347,13 +349,95 @@ function App() {
           genres: preferences.genres,
           language: preferences.language
         });
-        console.log('Preferences saved before finding movies');
+        console.log('✅ Preferences saved to user profile');
       } catch (error) {
-        console.error('Failed to save preferences:', error);
+        console.error('❌ Failed to save preferences:', error);
       }
     }
     
-    // TODO: Navigate to tinder-like recommendation screen
+    // Search for movies using AI
+    try {
+      console.log('%c🔍 Sending search request to backend...', 'background: #FF9800; color: white; padding: 5px; font-weight: bold;');
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      
+      const searchPayload = {
+        description: preferences.description,
+        yearRange: preferences.releaseYear,
+        runtimeRange: preferences.runtime,
+        ratingRange: preferences.imdbRating,
+        ageRating: preferences.ageRating,
+        moodIntensity: preferences.moodIntensity,
+        humorLevel: preferences.humorLevel,
+        violenceLevel: preferences.violenceLevel,
+        romanceLevel: preferences.romanceLevel,
+        complexityLevel: preferences.complexityLevel,
+        genres: preferences.genres,
+        language: preferences.language
+      };
+      
+      console.log('%c📤 Request Payload:', 'background: #9C27B0; color: white; padding: 5px;');
+      console.log(JSON.stringify(searchPayload, null, 2));
+      
+      const response = await fetch(`${backendUrl}/api/movies/search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(searchPayload)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        console.log('%c✅ SEARCH COMPLETE!', 'background: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+        console.log('%c📊 Search Results Summary:', 'background: #2196F3; color: white; padding: 5px; font-weight: bold;');
+        console.log(`Total matches found: ${data.count}`);
+        console.log(`Success: ${data.success}`);
+        
+        console.log('%c📥 Full API Response:', 'background: #9C27B0; color: white; padding: 5px;');
+        console.log(JSON.stringify(data, null, 2));
+        
+        if (data.movies && data.movies.length > 0) {
+          console.log('%c🎯 Top 10 Movie Matches:', 'background: #FF5722; color: white; padding: 5px; font-weight: bold;');
+          console.table(
+            data.movies.slice(0, 10).map((movie: any, index: number) => ({
+              '#': index + 1,
+              'Title': movie.title,
+              'Year': movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A',
+              'Rating': `${movie.voteAverage}/10`,
+              'Match %': `${(movie.matchScore * 100).toFixed(1)}%`,
+              'Genres': movie.genres?.map((g: any) => g.name).join(', ') || 'N/A'
+            }))
+          );
+          
+          console.log('%c💡 Match Reasons (Top 5):', 'background: #00BCD4; color: white; padding: 5px; font-weight: bold;');
+          data.movies.slice(0, 5).forEach((movie: any, index: number) => {
+            console.log(`\n${index + 1}. ${movie.title} (${movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A'})`);
+            console.log(`   🎯 Match Score: ${(movie.matchScore * 100).toFixed(1)}%`);
+            console.log(`   ⭐ TMDB Rating: ${movie.voteAverage}/10`);
+            console.log(`   🎭 Genres: ${movie.genres?.map((g: any) => g.name).join(', ')}`);
+            console.log(`   💡 Why it matches: ${movie.matchReason}`);
+            console.log(`   📝 Overview: ${movie.overview?.substring(0, 150)}...`);
+          });
+        } else {
+          console.log('%c⚠️ No movies found matching criteria', 'background: #FF9800; color: white; padding: 5px;');
+        }
+        
+        console.log('%c🎬 FINDING MOVIES - END', 'background: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+        
+        // TODO: Navigate to tinder-like recommendation screen with data.movies
+      } else {
+        const error = await response.json();
+        console.log('%c❌ SEARCH FAILED!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+        console.error('Error response:', error);
+        alert('Failed to find movies. Please try again.');
+      }
+    } catch (error) {
+      console.log('%c❌ CONNECTION ERROR!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+      console.error('Error details:', error);
+      alert('Error connecting to server. Please check your connection.');
+    }
   };
 
   return (
