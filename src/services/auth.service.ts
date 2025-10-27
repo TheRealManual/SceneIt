@@ -3,9 +3,18 @@ import { User } from '../types/user';
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 export const authService = {
-  // Redirect to Google OAuth
+  // Redirect to Google OAuth (or dev login in development)
   loginWithGoogle: () => {
-    window.location.href = `${API_URL}/auth/google`;
+    // Check if in development mode
+    const isDev = import.meta.env.DEV;
+    
+    if (isDev) {
+      // Use dev login endpoint in development
+      window.location.href = `${API_URL}/auth/dev-login`;
+    } else {
+      // Use Google OAuth in production
+      window.location.href = `${API_URL}/auth/google`;
+    }
   },
 
   // Get current user session
