@@ -1,9 +1,18 @@
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 export interface UserPreferences {
-  yearRange: [number, number];
-  ratingRange: [number, number];
-  genres: string[];
+  description?: string;
+  yearRange?: [number, number];
+  runtimeRange?: [number, number];
+  ratingRange?: [number, number];
+  ageRating?: string;
+  moodIntensity?: number;
+  humorLevel?: number;
+  violenceLevel?: number;
+  romanceLevel?: number;
+  complexityLevel?: number;
+  genres?: { [key: string]: number };
+  language?: string;
 }
 
 export interface Movie {
