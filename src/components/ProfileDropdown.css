@@ -1,0 +1,137 @@
+.profile-dropdown-container {
+  position: relative;
+  z-index: 1000;
+}
+
+.profile-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(14, 14, 14, 0.9) 100%);
+  border: 1px solid var(--netflix-soft-red);
+  border-radius: 25px;
+  padding: 0.4rem 1rem 0.4rem 0.4rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.profile-button:hover {
+  background: linear-gradient(135deg, rgba(47, 47, 47, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
+  border-color: var(--netflix-red);
+  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+  transform: translateY(-2px);
+}
+
+.profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--netflix-red);
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.profile-button:hover .profile-avatar {
+  border-color: var(--netflix-white);
+  box-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+}
+
+.profile-name {
+  color: var(--netflix-white);
+  font-weight: 500;
+  font-size: 0.95rem;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-arrow {
+  transition: transform 0.3s ease;
+  color: var(--netflix-red);
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0e0e0e 100%);
+  border: 1px solid var(--netflix-soft-red);
+  border-radius: 12px;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+              0 0 15px var(--netflix-glow-red);
+  overflow: hidden;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--netflix-white);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  border-bottom: 1px solid rgba(229, 9, 20, 0.1);
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(90deg, rgba(229, 9, 20, 0.15) 0%, rgba(229, 9, 20, 0.05) 100%);
+  padding-left: 1.25rem;
+}
+
+.dropdown-item.logout:hover {
+  background: linear-gradient(90deg, rgba(229, 9, 20, 0.25) 0%, rgba(229, 9, 20, 0.1) 100%);
+  color: var(--netflix-red);
+}
+
+.dropdown-item svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.dropdown-item:hover svg {
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-name {
+    display: none;
+  }
+
+  .profile-button {
+    padding: 0.4rem;
+  }
+
+  .dropdown-menu {
+    right: -10px;
+  }
+}

@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import LoginButton from './components/LoginButton'
+import ProfileDropdown from './components/ProfileDropdown'
+import ProfileModal from './components/ProfileModal'
+import { authService } from './services/auth.service'
+import { User } from './types/user'
 
 interface BackendStatus {
   connected: boolean;
@@ -23,6 +28,8 @@ interface MoviePreferences {
 }
 
 function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     connected: false,
     message: 'Checking connection...',
@@ -90,6 +97,31 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const currentUser = await authService.getCurrentUser();
+      setUser(currentUser);
+    };
+    checkAuthStatus();
+  }, []);
+
+  const handleLogin = () => {
+    authService.loginWithGoogle();
+  };
+
+  const handleLogout = async () => {
+    const success = await authService.logout();
+    if (success) {
+      setUser(null);
+      setShowProfileModal(false);
+    }
+  };
+
+  const handleViewProfile = () => {
+    setShowProfileModal(true);
+  };
+
   const handleClearPreferences = () => {
     setPreferences({
       description: '',
@@ -126,8 +158,23 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🎬 SceneIt</h1>
-        <p>Find Your Perfect Movie Match</p>
+        <div className="header-content">
+          <div className="header-left">
+            <h1>🎬 SceneIt</h1>
+            <p>Find Your Perfect Movie Match</p>
+          </div>
+          <div className="header-right">
+            {user ? (
+              <ProfileDropdown 
+                user={user} 
+                onLogout={handleLogout}
+                onViewProfile={handleViewProfile}
+              />
+            ) : (
+              <LoginButton onLogin={handleLogin} />
+            )}
+          </div>
+        </div>
       </header>
 
       <main className="preferences-container">
@@ -405,6 +452,14 @@ function App() {
           )}
         </div>
       </footer>
+
+      {/* Profile Modal */}
+      {showProfileModal && user && (
+        <ProfileModal 
+          user={user} 
+          onClose={() => setShowProfileModal(false)} 
+        />
+      )}
     </div>
   )
 }
