@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import LoginButton from './components/LoginButton'
 import ProfileDropdown from './components/ProfileDropdown'
