@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './App.css'
 import LoginButton from './components/LoginButton'
 import ProfileDropdown from './components/ProfileDropdown'
 import ProfileModal from './components/ProfileModal'
 import { authService } from './services/auth.service'
+import { userService } from './services/user.service'
 import { User } from './types/user'
 
 interface BackendStatus {
@@ -30,6 +31,7 @@ interface MoviePreferences {
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     connected: false,
     message: 'Checking connection...',
@@ -102,15 +104,157 @@ function App() {
     const checkAuthStatus = async () => {
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
+      
+      // Load user preferences from backend if logged in
+      if (currentUser) {
+        try {
+          const userProfile = await userService.getProfile();
+          if (userProfile && userProfile.preferences) {
+            console.log('Loading saved preferences:', userProfile.preferences);
+            
+            // Map backend preferences to frontend format
+            const loadedPreferences: Partial<MoviePreferences> = {};
+            const prefs = userProfile.preferences;
+            
+            // Load all scalar preferences
+            if (prefs.description) loadedPreferences.description = prefs.description;
+            if (prefs.ageRating) loadedPreferences.ageRating = prefs.ageRating;
+            if (prefs.language) loadedPreferences.language = prefs.language;
+            
+            // Load numeric preferences
+            if (prefs.moodIntensity !== undefined) loadedPreferences.moodIntensity = prefs.moodIntensity;
+            if (prefs.humorLevel !== undefined) loadedPreferences.humorLevel = prefs.humorLevel;
+            if (prefs.violenceLevel !== undefined) loadedPreferences.violenceLevel = prefs.violenceLevel;
+            if (prefs.romanceLevel !== undefined) loadedPreferences.romanceLevel = prefs.romanceLevel;
+            if (prefs.complexityLevel !== undefined) loadedPreferences.complexityLevel = prefs.complexityLevel;
+            
+            // Load ranges
+            if (prefs.yearRange && prefs.yearRange.length === 2) {
+              loadedPreferences.releaseYear = prefs.yearRange as [number, number];
+            }
+            if (prefs.runtimeRange && prefs.runtimeRange.length === 2) {
+              loadedPreferences.runtime = prefs.runtimeRange as [number, number];
+            }
+            if (prefs.ratingRange && prefs.ratingRange.length === 2) {
+              loadedPreferences.imdbRating = prefs.ratingRange as [number, number];
+            }
+            
+            // Load genres map
+            if (prefs.genres && typeof prefs.genres === 'object') {
+              loadedPreferences.genres = prefs.genres as { [key: string]: number };
+            }
+            
+            // Update preferences with loaded data
+            setPreferences(prev => ({
+              ...prev,
+              ...loadedPreferences
+            }));
+            
+            setPreferencesLoaded(true);
+            console.log('Preferences loaded successfully');
+          } else {
+            // No saved preferences, mark as loaded with defaults
+            setPreferencesLoaded(true);
+          }
+        } catch (error) {
+          console.error('Failed to load user preferences:', error);
+          // Still mark as loaded to allow user to set preferences
+          setPreferencesLoaded(true);
+        }
+      } else {
+        // Not logged in, use defaults
+        setPreferencesLoaded(true);
+      }
     };
     checkAuthStatus();
   }, []);
+
+  // Auto-save preferences when they change (debounced)
+  useEffect(() => {
+    // Don't save until preferences have been loaded from backend
+    if (!user || !preferencesLoaded) return;
+
+    const saveTimer = setTimeout(async () => {
+      try {
+        await userService.updatePreferences({
+          description: preferences.description,
+          yearRange: preferences.releaseYear,
+          runtimeRange: preferences.runtime,
+          ratingRange: preferences.imdbRating,
+          ageRating: preferences.ageRating,
+          moodIntensity: preferences.moodIntensity,
+          humorLevel: preferences.humorLevel,
+          violenceLevel: preferences.violenceLevel,
+          romanceLevel: preferences.romanceLevel,
+          complexityLevel: preferences.complexityLevel,
+          genres: preferences.genres,
+          language: preferences.language
+        });
+        console.log('Preferences auto-saved');
+      } catch (error) {
+        console.error('Failed to auto-save preferences:', error);
+      }
+    }, 1000); // Save 1 second after user stops changing preferences
+
+    return () => clearTimeout(saveTimer);
+  }, [preferences, user, preferencesLoaded]);
+
+  // Save preferences before page unload
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (!user) return;
+
+      try {
+        await userService.updatePreferences({
+          description: preferences.description,
+          yearRange: preferences.releaseYear,
+          runtimeRange: preferences.runtime,
+          ratingRange: preferences.imdbRating,
+          ageRating: preferences.ageRating,
+          moodIntensity: preferences.moodIntensity,
+          humorLevel: preferences.humorLevel,
+          violenceLevel: preferences.violenceLevel,
+          romanceLevel: preferences.romanceLevel,
+          complexityLevel: preferences.complexityLevel,
+          genres: preferences.genres,
+          language: preferences.language
+        });
+      } catch (error) {
+        console.error('Failed to save preferences on exit:', error);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [preferences, user]);
 
   const handleLogin = () => {
     authService.loginWithGoogle();
   };
 
   const handleLogout = async () => {
+    // Save preferences before logging out
+    if (user) {
+      try {
+        await userService.updatePreferences({
+          description: preferences.description,
+          yearRange: preferences.releaseYear,
+          runtimeRange: preferences.runtime,
+          ratingRange: preferences.imdbRating,
+          ageRating: preferences.ageRating,
+          moodIntensity: preferences.moodIntensity,
+          humorLevel: preferences.humorLevel,
+          violenceLevel: preferences.violenceLevel,
+          romanceLevel: preferences.romanceLevel,
+          complexityLevel: preferences.complexityLevel,
+          genres: preferences.genres,
+          language: preferences.language
+        });
+      } catch (error) {
+        console.error('Failed to save preferences before logout:', error);
+      }
+    }
+
     const success = await authService.logout();
     if (success) {
       setUser(null);
@@ -118,7 +262,28 @@ function App() {
     }
   };
 
-  const handleViewProfile = () => {
+  const handleViewProfile = async () => {
+    // Save preferences before viewing profile
+    if (user) {
+      try {
+        await userService.updatePreferences({
+          description: preferences.description,
+          yearRange: preferences.releaseYear,
+          runtimeRange: preferences.runtime,
+          ratingRange: preferences.imdbRating,
+          ageRating: preferences.ageRating,
+          moodIntensity: preferences.moodIntensity,
+          humorLevel: preferences.humorLevel,
+          violenceLevel: preferences.violenceLevel,
+          romanceLevel: preferences.romanceLevel,
+          complexityLevel: preferences.complexityLevel,
+          genres: preferences.genres,
+          language: preferences.language
+        });
+      } catch (error) {
+        console.error('Failed to save preferences:', error);
+      }
+    }
     setShowProfileModal(true);
   };
 
@@ -150,8 +315,32 @@ function App() {
     });
   };
 
-  const handleSubmitPreferences = () => {
+  const handleSubmitPreferences = async () => {
     console.log('Movie Preferences:', preferences);
+    
+    // Save preferences before navigating
+    if (user) {
+      try {
+        await userService.updatePreferences({
+          description: preferences.description,
+          yearRange: preferences.releaseYear,
+          runtimeRange: preferences.runtime,
+          ratingRange: preferences.imdbRating,
+          ageRating: preferences.ageRating,
+          moodIntensity: preferences.moodIntensity,
+          humorLevel: preferences.humorLevel,
+          violenceLevel: preferences.violenceLevel,
+          romanceLevel: preferences.romanceLevel,
+          complexityLevel: preferences.complexityLevel,
+          genres: preferences.genres,
+          language: preferences.language
+        });
+        console.log('Preferences saved before finding movies');
+      } catch (error) {
+        console.error('Failed to save preferences:', error);
+      }
+    }
+    
     // TODO: Navigate to tinder-like recommendation screen
   };
 
