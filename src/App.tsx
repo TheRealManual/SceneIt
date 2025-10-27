@@ -3,6 +3,7 @@ import './App.css'
 import LoginButton from './components/LoginButton'
 import ProfileDropdown from './components/ProfileDropdown'
 import ProfileModal from './components/ProfileModal'
+import LoadingScreen from './components/LoadingScreen'
 import { authService } from './services/auth.service'
 import { userService } from './services/user.service'
 import { User } from './types/user'
@@ -31,6 +32,7 @@ interface MoviePreferences {
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     connected: false,
@@ -332,6 +334,9 @@ function App() {
     console.log('%c📋 User Preferences:', 'background: #2196F3; color: white; padding: 5px; font-weight: bold;');
     console.log(JSON.stringify(preferences, null, 2));
     
+    // Show loading screen
+    setShowLoadingScreen(true);
+    
     // Save preferences before searching
     if (user) {
       try {
@@ -426,16 +431,72 @@ function App() {
         
         console.log('%c🎬 FINDING MOVIES - END', 'background: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
         
+        // Hide loading screen
+        setShowLoadingScreen(false);
+        
         // TODO: Navigate to tinder-like recommendation screen with data.movies
       } else {
         const error = await response.json();
         console.log('%c❌ SEARCH FAILED!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
         console.error('Error response:', error);
+        setShowLoadingScreen(false);
         alert('Failed to find movies. Please try again.');
       }
     } catch (error) {
       console.log('%c❌ CONNECTION ERROR!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
       console.error('Error details:', error);
+      setShowLoadingScreen(false);
+      alert('Error connecting to server. Please check your connection.');
+    }
+  };
+
+  const handleSubmitPreferencesDev = async () => {
+    console.log('%c🧪 DEV MODE - FINDING RANDOM MOVIES', 'background: #FF5722; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+    
+    // Show loading screen
+    setShowLoadingScreen(true);
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      
+      // Fetch random movies
+      const response = await fetch(`${backendUrl}/api/movies/random?count=10`, {
+        credentials: 'include'
+      });
+      
+      // Wait minimum 5 seconds for testing loading screen
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        console.log('%c✅ RANDOM MOVIES FETCHED!', 'background: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+        console.log(`Found ${data.count} random movies`);
+        
+        console.log('%c🎲 Random Movies:', 'background: #FF5722; color: white; padding: 5px; font-weight: bold;');
+        console.table(
+          data.movies.map((movie: any, index: number) => ({
+            '#': index + 1,
+            'Title': movie.title,
+            'Year': movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A',
+            'Rating': `${movie.voteAverage}/10`,
+            'Genres': movie.genres?.map((g: any) => g.name).join(', ') || 'N/A'
+          }))
+        );
+        
+        // Hide loading screen
+        setShowLoadingScreen(false);
+        
+        // TODO: Navigate to tinder-like recommendation screen with data.movies
+      } else {
+        console.log('%c❌ DEV MODE FAILED!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+        setShowLoadingScreen(false);
+        alert('Failed to fetch random movies. Please try again.');
+      }
+    } catch (error) {
+      console.log('%c❌ DEV MODE ERROR!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
+      console.error('Error details:', error);
+      setShowLoadingScreen(false);
       alert('Error connecting to server. Please check your connection.');
     }
   };
@@ -715,6 +776,9 @@ function App() {
             <button onClick={handleClearPreferences} className="clear-button">
               Clear All
             </button>
+            <button onClick={handleSubmitPreferencesDev} className="dev-button">
+              🧪 Find My Movies (Dev)
+            </button>
             <button onClick={handleSubmitPreferences} className="submit-button">
               Find My Movies
             </button>
@@ -737,6 +801,9 @@ function App() {
           )}
         </div>
       </footer>
+
+      {/* Loading Screen */}
+      {showLoadingScreen && <LoadingScreen />}
 
       {/* Profile Modal */}
       {showProfileModal && user && (

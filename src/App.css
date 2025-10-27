@@ -400,14 +400,15 @@
 .form-actions {
   display: flex;
   justify-content: center;
-  gap: 2rem;
+  gap: 1.5rem;
   margin-top: 3rem;
   padding-top: 2rem;
   border-top: 1px solid var(--netflix-soft-red);
   animation: fadeInUp 0.8s ease-out 1s both;
+  flex-wrap: wrap;
 }
 
-.clear-button, .submit-button {
+.clear-button, .submit-button, .dev-button {
   padding: 1rem 2rem;
   border: none;
   border-radius: 12px;
@@ -461,7 +462,7 @@
   transform: translateY(-1px) scale(1.01);
 }
 
-.clear-button::before, .submit-button::before {
+.clear-button::before, .submit-button::before, .dev-button::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -474,9 +475,32 @@
   border-radius: 50%;
 }
 
-.clear-button:hover::before, .submit-button:hover::before {
+.clear-button:hover::before, .submit-button:hover::before, .dev-button:hover::before {
   width: 300px;
   height: 300px;
+}
+
+/* Dev Button - Orange/Red Theme */
+.dev-button {
+  background: linear-gradient(45deg, #FF6B35, #F7931E);
+  color: var(--netflix-white);
+  border: 1px solid #FFB84D;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4), 
+              0 0 10px rgba(247, 147, 30, 0.3);
+  text-transform: none;
+  font-size: 1rem;
+}
+
+.dev-button:hover {
+  background: linear-gradient(45deg, #F7931E, #FF6B35);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 30px rgba(255, 107, 53, 0.6), 
+              0 0 20px rgba(247, 147, 30, 0.5);
+  border-color: #FFD700;
+}
+
+.dev-button:active {
+  transform: translateY(-1px) scale(1.01);
 }
 
 /* Backend Status Footer */
