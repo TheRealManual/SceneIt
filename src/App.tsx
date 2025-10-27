@@ -70,6 +70,10 @@ function App() {
       
       // Use Vite environment variables
       const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const isDev = import.meta.env.DEV;
+      const envMode = isDev ? 'Development' : 'Production';
+      
+      console.log(`Checking backend connection (${envMode} mode):`, backendUrl);
       
       const response = await fetch(`${backendUrl}/api/status`);
       
@@ -77,16 +81,20 @@ function App() {
         const data = await response.json();
         setBackendStatus({
           connected: true,
-          message: data.message || 'Connected to backend!',
+          message: `Connected to ${envMode} backend!`,
           loading: false
         });
+        console.log('Backend connected:', data);
       } else {
         throw new Error('Backend response not ok');
       }
     } catch (error) {
+      const isDev = import.meta.env.DEV;
+      const envMode = isDev ? 'Development' : 'Production';
+      console.error(`Failed to connect to ${envMode} backend:`, error);
       setBackendStatus({
         connected: false,
-        message: 'Unable to connect to backend',
+        message: `Unable to connect to ${envMode} backend`,
         loading: false
       });
     }
