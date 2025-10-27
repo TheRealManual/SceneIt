@@ -147,9 +147,13 @@ function App() {
               loadedPreferences.imdbRating = prefs.ratingRange as [number, number];
             }
             
-            // Load genres map
+            // Load genres map - only if it has actual values
             if (prefs.genres && typeof prefs.genres === 'object') {
-              loadedPreferences.genres = prefs.genres as { [key: string]: number };
+              const genresObj = prefs.genres as { [key: string]: number };
+              // Only load if it has at least one genre, otherwise keep defaults
+              if (Object.keys(genresObj).length > 0) {
+                loadedPreferences.genres = genresObj;
+              }
             }
             
             // Update preferences with loaded data
