@@ -464,7 +464,7 @@ function App() {
         // Update session state - move from disliked to liked
         const movedMovie = sessionDislikedMovies.find(m => m.tmdbId.toString() === movieId);
         if (movedMovie) {
-          setSessionDislikedMovies(prev => prev.filter(m => m.tmdbId.toString() === movieId));
+          setSessionDislikedMovies(prev => prev.filter(m => m.tmdbId.toString() !== movieId));
           setSessionLikedMovies(prev => [...prev, movedMovie]);
         }
         
