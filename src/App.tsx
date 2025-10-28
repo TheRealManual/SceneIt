@@ -1,13 +1,26 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import LoginButton from './components/LoginButton'
-import ProfileDropdown from './components/ProfileDropdown'
+import Header from './components/Header'
 import ProfileModal from './components/ProfileModal'
 import LoadingScreen from './components/LoadingScreen'
 import AuthPromptModal from './components/AuthPromptModal'
+import MovieSwiper from './components/MovieSwiper'
+import LikedMoviesView from './components/LikedMoviesView'
+import DislikedMoviesView from './components/DislikedMoviesView'
 import { authService } from './services/auth.service'
 import { userService } from './services/user.service'
 import { User } from './types/user'
+
+interface Movie {
+  tmdbId: number;
+  title: string;
+  posterPath: string;
+  overview: string;
+  releaseDate?: string;
+  genres?: Array<{ id: number; name: string }>;
+  voteAverage?: number;
+  runtime?: number;
+}
 
 interface BackendStatus {
   connected: boolean;
@@ -30,12 +43,24 @@ interface MoviePreferences {
   language: string;
 }
 
+type ViewState = 'preferences' | 'loading' | 'results' | 'liked-summary' | 'liked-movies-page' | 'disliked-movies-page';
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [currentView, setCurrentView] = useState<ViewState>('preferences');
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [likedMovies, setLikedMovies] = useState<Movie[]>([]);
+  const [dislikedMovies, setDislikedMovies] = useState<Movie[]>([]);
+  const [favoriteMovies, setFavoriteMovies] = useState<Movie[]>([]);
+  const [favoriteMovieIds, setFavoriteMovieIds] = useState<Set<string>>(new Set());
+  
+  // Session-specific likes/dislikes (only for current swipe session)
+  const [sessionLikedMovies, setSessionLikedMovies] = useState<Movie[]>([]);
+  const [sessionDislikedMovies, setSessionDislikedMovies] = useState<Movie[]>([]);
+  
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     connected: false,
     message: 'Checking connection...',
@@ -342,8 +367,12 @@ function App() {
     console.log('%c📋 User Preferences:', 'background: #2196F3; color: white; padding: 5px; font-weight: bold;');
     console.log(JSON.stringify(preferences, null, 2));
     
+    // Clear session movies for new search
+    setSessionLikedMovies([]);
+    setSessionDislikedMovies([]);
+    
     // Show loading screen
-    setShowLoadingScreen(true);
+    setCurrentView('loading');
     
     // Save preferences before searching
     if (user) {
@@ -439,21 +468,26 @@ function App() {
         
         console.log('%c🎬 FINDING MOVIES - END', 'background: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
         
-        // Hide loading screen
-        setShowLoadingScreen(false);
-        
-        // TODO: Navigate to tinder-like recommendation screen with data.movies
+        // Navigate to results view
+        if (data.movies && data.movies.length > 0) {
+          setMovies(data.movies);
+          setLikedMovies([]);
+          setCurrentView('results');
+        } else {
+          setCurrentView('preferences');
+          alert('No movies found. Try different preferences.');
+        }
       } else {
         const error = await response.json();
         console.log('%c❌ SEARCH FAILED!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
         console.error('Error response:', error);
-        setShowLoadingScreen(false);
+        setCurrentView('preferences');
         alert('Failed to find movies. Please try again.');
       }
     } catch (error) {
       console.log('%c❌ CONNECTION ERROR!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
       console.error('Error details:', error);
-      setShowLoadingScreen(false);
+      setCurrentView('preferences');
       alert('Error connecting to server. Please check your connection.');
     }
   };
@@ -468,7 +502,7 @@ function App() {
     console.log('%c🧪 DEV MODE - FINDING RANDOM MOVIES', 'background: #FF5722; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
     
     // Show loading screen
-    setShowLoadingScreen(true);
+    setCurrentView('loading');
     
     try {
       const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -498,44 +532,540 @@ function App() {
           }))
         );
         
-        // Hide loading screen
-        setShowLoadingScreen(false);
-        
-        // TODO: Navigate to tinder-like recommendation screen with data.movies
+        // Navigate to results view
+        if (data.movies && data.movies.length > 0) {
+          setMovies(data.movies);
+          setLikedMovies([]);
+          setCurrentView('results');
+        } else {
+          setCurrentView('preferences');
+          alert('No movies found.');
+        }
       } else {
         console.log('%c❌ DEV MODE FAILED!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
-        setShowLoadingScreen(false);
+        setCurrentView('preferences');
         alert('Failed to fetch random movies. Please try again.');
       }
     } catch (error) {
       console.log('%c❌ DEV MODE ERROR!', 'background: #F44336; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
       console.error('Error details:', error);
-      setShowLoadingScreen(false);
+      setCurrentView('preferences');
       alert('Error connecting to server. Please check your connection.');
     }
   };
 
+  // Load user's favorite movies on mount
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!user) return;
+      
+      try {
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const response = await fetch(`${backendUrl}/api/user/movies/favorites`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const ids = new Set<string>(data.favoriteMovies.map((m: any) => m.movieId));
+          setFavoriteMovieIds(ids);
+        }
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
+    };
+    
+    loadFavorites();
+  }, [user]);
+
+  // Handle like movie
+  const handleLike = async (movie: Movie) => {
+    // Add to session liked movies
+    setSessionLikedMovies(prev => {
+      const exists = prev.some(m => m.tmdbId === movie.tmdbId);
+      if (exists) return prev;
+      return [...prev, movie];
+    });
+    
+    // Also add to global liked movies for consistency
+    setLikedMovies(prev => {
+      const exists = prev.some(m => m.tmdbId === movie.tmdbId);
+      if (exists) return prev;
+      return [...prev, movie];
+    });
+    
+    if (user) {
+      try {
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+        await fetch(`${backendUrl}/api/user/movies/like`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            movieId: movie.tmdbId.toString(),
+            title: movie.title,
+            posterPath: movie.posterPath
+          })
+        });
+      } catch (error) {
+        console.error('Error saving liked movie:', error);
+      }
+    }
+  };
+
+  // Handle dislike movie
+  const handleDislike = async (movie: Movie) => {
+    // Add to session disliked movies
+    setSessionDislikedMovies(prev => {
+      const exists = prev.some(m => m.tmdbId === movie.tmdbId);
+      if (exists) return prev;
+      return [...prev, movie];
+    });
+    
+    // Also add to global disliked movies for consistency
+    setDislikedMovies(prev => {
+      const exists = prev.some(m => m.tmdbId === movie.tmdbId);
+      if (exists) return prev;
+      return [...prev, movie];
+    });
+    
+    if (user) {
+      try {
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+        await fetch(`${backendUrl}/api/user/movies/dislike`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            movieId: movie.tmdbId.toString(),
+            title: movie.title,
+            posterPath: movie.posterPath
+          })
+        });
+      } catch (error) {
+        console.error('Error saving disliked movie:', error);
+      }
+    }
+  };
+
+  // Handle finish swiping
+  const handleFinishSwiping = () => {
+    setCurrentView('liked-summary');
+  };
+
+  // Handle add to favorites
+  const handleAddToFavorites = async (movieId: string, title: string, posterPath: string) => {
+    if (!user) return;
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/favorites`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ movieId, title, posterPath })
+      });
+      
+      if (response.ok) {
+        setFavoriteMovieIds(prev => new Set(prev).add(movieId));
+        // Add to favoriteMovies array - check both global and session liked movies
+        const movie = likedMovies.find(m => m.tmdbId.toString() === movieId) || 
+                      sessionLikedMovies.find(m => m.tmdbId.toString() === movieId);
+        if (movie) {
+          setFavoriteMovies(prev => {
+            const exists = prev.some(m => m.tmdbId.toString() === movieId);
+            if (exists) return prev;
+            return [...prev, movie];
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+    }
+  };
+
+  // Handle remove from favorites
+  const handleRemoveFromFavorites = async (movieId: string) => {
+    if (!user) return;
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/favorites/${movieId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        setFavoriteMovieIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(movieId);
+          return newSet;
+        });
+        setFavoriteMovies(prev => prev.filter(m => m.tmdbId.toString() !== movieId));
+      }
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+    }
+  };
+
+  // Handle move to disliked
+  const handleMoveToDisliked = async (movieId: string, title: string, posterPath: string) => {
+    console.log('handleMoveToDisliked called:', movieId, title);
+    if (!user) return;
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/move-to-disliked`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ movieId, title, posterPath })
+      });
+      
+      console.log('Move to disliked response:', response.ok);
+      
+      if (response.ok) {
+        // Find the movie from either global or session arrays
+        const movie = likedMovies.find(m => m.tmdbId.toString() === movieId) || 
+                      favoriteMovies.find(m => m.tmdbId.toString() === movieId) ||
+                      sessionLikedMovies.find(m => m.tmdbId.toString() === movieId);
+        
+        // Remove from liked movies (both global and session)
+        setLikedMovies(prev => prev.filter(m => m.tmdbId.toString() !== movieId));
+        setSessionLikedMovies(prev => prev.filter(m => m.tmdbId.toString() !== movieId));
+        
+        // Remove from favorites
+        setFavoriteMovieIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(movieId);
+          return newSet;
+        });
+        setFavoriteMovies(prev => prev.filter(m => m.tmdbId.toString() !== movieId));
+        
+        // Add to disliked movies (both global and session)
+        if (movie) {
+          setDislikedMovies(prev => {
+            const exists = prev.some(m => m.tmdbId.toString() === movieId);
+            if (exists) return prev;
+            return [...prev, movie];
+          });
+          setSessionDislikedMovies(prev => {
+            const exists = prev.some(m => m.tmdbId.toString() === movieId);
+            if (exists) return prev;
+            return [...prev, movie];
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error moving to disliked:', error);
+    }
+  };
+
+  // Handle move to liked
+  const handleMoveToLiked = async (movieId: string, title: string, posterPath: string) => {
+    console.log('handleMoveToLiked called:', movieId, title);
+    if (!user) return;
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/move-to-liked`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ movieId, title, posterPath })
+      });
+      
+      console.log('Move to liked response:', response.ok);
+      
+      if (response.ok) {
+        // Find the movie from either global or session arrays
+        const movie = dislikedMovies.find(m => m.tmdbId.toString() === movieId) ||
+                      sessionDislikedMovies.find(m => m.tmdbId.toString() === movieId);
+        
+        // Remove from disliked movies (both global and session)
+        setDislikedMovies(prev => prev.filter(m => m.tmdbId.toString() !== movieId));
+        setSessionDislikedMovies(prev => prev.filter(m => m.tmdbId.toString() !== movieId));
+        
+        // Add to liked movies (both global and session)
+        if (movie) {
+          setLikedMovies(prev => {
+            const exists = prev.some(m => m.tmdbId.toString() === movieId);
+            if (exists) return prev;
+            return [...prev, movie];
+          });
+          setSessionLikedMovies(prev => {
+            const exists = prev.some(m => m.tmdbId.toString() === movieId);
+            if (exists) return prev;
+            return [...prev, movie];
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error moving to liked:', error);
+    }
+  };
+
+  // Handle view liked movies page
+  const handleViewLikedMovies = async () => {
+    if (!user) return;
+    
+    // Load liked movies and favorites from backend
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      
+      // Fetch liked movies
+      const likedResponse = await fetch(`${backendUrl}/api/user/movies/liked`, {
+        credentials: 'include'
+      });
+      
+      // Fetch favorites
+      const favoritesResponse = await fetch(`${backendUrl}/api/user/movies/favorites`, {
+        credentials: 'include'
+      });
+      
+      if (likedResponse.ok && favoritesResponse.ok) {
+        const likedData = await likedResponse.json();
+        const favoritesData = await favoritesResponse.json();
+        
+        // Convert to Movie format
+        const likedMoviesFromBackend = likedData.likedMovies?.map((m: any) => ({
+          tmdbId: parseInt(m.movieId),
+          title: m.title,
+          posterPath: m.posterPath,
+          overview: '',
+          releaseDate: m.likedAt
+        })) || [];
+        
+        const favoriteMoviesFromBackend = favoritesData.favoriteMovies?.map((m: any) => ({
+          tmdbId: parseInt(m.movieId),
+          title: m.title,
+          posterPath: m.posterPath,
+          overview: '',
+          releaseDate: m.favoritedAt
+        })) || [];
+        
+        setLikedMovies(likedMoviesFromBackend);
+        setFavoriteMovies(favoriteMoviesFromBackend);
+        setFavoriteMovieIds(new Set(favoriteMoviesFromBackend.map((m: Movie) => m.tmdbId.toString())));
+        
+        setCurrentView('liked-movies-page');
+      }
+    } catch (error) {
+      console.error('Error loading liked movies:', error);
+    }
+  };
+
+  // Handle view disliked movies page
+  const handleViewDislikedMovies = async () => {
+    if (!user) return;
+    
+    // Load disliked movies from backend
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/disliked`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const dislikedMoviesFromBackend = data.dislikedMovies?.map((m: any) => ({
+          tmdbId: parseInt(m.movieId),
+          title: m.title,
+          posterPath: m.posterPath,
+          overview: '',
+          releaseDate: m.dislikedAt
+        })) || [];
+        
+        setDislikedMovies(dislikedMoviesFromBackend);
+        setCurrentView('disliked-movies-page');
+      }
+    } catch (error) {
+      console.error('Error loading disliked movies:', error);
+    }
+  };
+
+  // Handle back to home
+  const handleBackToHome = () => {
+    setCurrentView('preferences');
+    setMovies([]);
+    setLikedMovies([]);
+    setSessionLikedMovies([]);
+    setSessionDislikedMovies([]);
+  };
+
+  // Handle keep searching
+  const handleKeepSearching = async () => {
+    if (!user) return;
+    
+    setCurrentView('loading');
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/movies/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          description: preferences.description,
+          yearRange: preferences.releaseYear,
+          runtimeRange: preferences.runtime,
+          ratingRange: preferences.imdbRating,
+          ageRating: preferences.ageRating,
+          moodIntensity: preferences.moodIntensity,
+          humorLevel: preferences.humorLevel,
+          violenceLevel: preferences.violenceLevel,
+          romanceLevel: preferences.romanceLevel,
+          complexityLevel: preferences.complexityLevel,
+          genres: preferences.genres,
+          language: preferences.language
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.movies && data.movies.length > 0) {
+          setMovies(data.movies);
+          // Don't clear liked/disliked movies - keep the session intact
+          setCurrentView('results');
+        } else {
+          setCurrentView('preferences');
+          alert('No more movies found. Try different preferences.');
+        }
+      } else {
+        setCurrentView('preferences');
+        alert('Failed to fetch more movies.');
+      }
+    } catch (error) {
+      console.error('Error fetching more movies:', error);
+      setCurrentView('preferences');
+      alert('Error connecting to server.');
+    }
+  };
+
+  // Render based on current view
+  if (currentView === 'loading') {
+    return <LoadingScreen />;
+  }
+
+  if (currentView === 'results' && movies.length > 0) {
+    return (
+      <div className="App">
+        <Header
+          user={user}
+          onLogout={handleLogout}
+          onViewProfile={handleViewProfile}
+          onLogin={handleLogin}
+          onLogoClick={handleBackToHome}
+          onViewLikedMovies={handleViewLikedMovies}
+          onViewDislikedMovies={handleViewDislikedMovies}
+        />
+        <MovieSwiper
+          movies={movies}
+          onLike={handleLike}
+          onDislike={handleDislike}
+          onFinish={handleFinishSwiping}
+        />
+      </div>
+    );
+  }
+
+  if (currentView === 'liked-summary') {
+    // Create a Set of favorite movie IDs from the session liked movies that are favorited
+    const sessionFavoriteIds = new Set(
+      sessionLikedMovies
+        .filter(m => favoriteMovieIds.has(m.tmdbId.toString()))
+        .map(m => m.tmdbId.toString())
+    );
+    
+    return (
+      <div className="App">
+        <Header
+          user={user}
+          onLogout={handleLogout}
+          onViewProfile={handleViewProfile}
+          onLogin={handleLogin}
+          onLogoClick={handleBackToHome}
+          onViewLikedMovies={handleViewLikedMovies}
+          onViewDislikedMovies={handleViewDislikedMovies}
+        />
+        <LikedMoviesView
+          movies={sessionLikedMovies}
+          favoriteMovies={[]}
+          dislikedMovies={sessionDislikedMovies}
+          onAddToFavorites={handleAddToFavorites}
+          onRemoveFromFavorites={handleRemoveFromFavorites}
+          onMoveToDisliked={handleMoveToDisliked}
+          onMoveToLiked={handleMoveToLiked}
+          onBackToHome={handleBackToHome}
+          onKeepSearching={handleKeepSearching}
+          favoriteMovieIds={sessionFavoriteIds}
+        />
+      </div>
+    );
+  }
+
+  if (currentView === 'liked-movies-page') {
+    // Filter out favorited movies from the liked section
+    const nonFavoritedLikedMovies = likedMovies.filter(m => !favoriteMovieIds.has(m.tmdbId.toString()));
+    
+    return (
+      <div className="App">
+        <Header
+          user={user}
+          onLogout={handleLogout}
+          onViewProfile={handleViewProfile}
+          onLogin={handleLogin}
+          onLogoClick={handleBackToHome}
+          onViewLikedMovies={handleViewLikedMovies}
+          onViewDislikedMovies={handleViewDislikedMovies}
+        />
+        <LikedMoviesView
+          movies={nonFavoritedLikedMovies}
+          favoriteMovies={favoriteMovies}
+          onAddToFavorites={handleAddToFavorites}
+          onRemoveFromFavorites={handleRemoveFromFavorites}
+          onMoveToDisliked={handleMoveToDisliked}
+          onBackToHome={handleBackToHome}
+          onKeepSearching={handleKeepSearching}
+          favoriteMovieIds={favoriteMovieIds}
+        />
+      </div>
+    );
+  }
+
+  if (currentView === 'disliked-movies-page') {
+    return (
+      <div className="App">
+        <Header
+          user={user}
+          onLogout={handleLogout}
+          onViewProfile={handleViewProfile}
+          onLogin={handleLogin}
+          onLogoClick={handleBackToHome}
+          onViewLikedMovies={handleViewLikedMovies}
+          onViewDislikedMovies={handleViewDislikedMovies}
+        />
+        <DislikedMoviesView
+          movies={dislikedMovies}
+          onMoveToLiked={handleMoveToLiked}
+          onBackToHome={handleBackToHome}
+          onKeepSearching={handleKeepSearching}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <div className="header-content">
-          <div className="header-left">
-            <h1>🎬 SceneIt</h1>
-            <p>Find Your Perfect Movie Match</p>
-          </div>
-          <div className="header-right">
-            {user ? (
-              <ProfileDropdown 
-                user={user} 
-                onLogout={handleLogout}
-                onViewProfile={handleViewProfile}
-              />
-            ) : (
-              <LoginButton onLogin={handleLogin} />
-            )}
-          </div>
-        </div>
-      </header>
+      <Header
+        user={user}
+        onLogout={handleLogout}
+        onViewProfile={handleViewProfile}
+        onLogin={handleLogin}
+        onLogoClick={handleBackToHome}
+        onViewLikedMovies={handleViewLikedMovies}
+        onViewDislikedMovies={handleViewDislikedMovies}
+      />
 
       <main className="preferences-container">
         <div className="preferences-form">
@@ -815,9 +1345,6 @@ function App() {
           )}
         </div>
       </footer>
-
-      {/* Loading Screen */}
-      {showLoadingScreen && <LoadingScreen />}
 
       {/* Profile Modal */}
       {showProfileModal && user && (

@@ -1,0 +1,420 @@
+.movie-swiper-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  animation: fadeIn 0.5s ease-in;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.movie-swiper-empty {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  color: white;
+}
+
+.movie-swiper-empty h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.movie-swiper-empty p {
+  font-size: 1.2rem;
+  color: #a0a0a0;
+}
+
+.swiper-header {
+  text-align: center;
+  margin-bottom: 0.25rem;
+  animation: slideDown 0.6s ease-out;
+  flex-shrink: 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.swiper-header h2 {
+  font-size: 1.5rem;
+  color: white;
+  margin: 0;
+}
+
+.movie-counter {
+  font-size: 0.95rem;
+  color: #a0a0a0;
+  margin: 0;
+}
+
+.swiper-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  max-width: 400px;
+  max-height: fit-content;
+  width: 100%;
+  margin: 0 auto;
+  perspective: 1000px;
+  min-height: 0;
+  overflow: visible;
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+.movie-card-swiper {
+  width: 100%;
+  max-height: calc(100vh - 140px);
+  background: #16213e;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 10;
+  animation: cardAppear 0.5s ease-out;
+  will-change: transform, opacity;
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-card-swiper.dragging {
+  user-select: none;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Swiping state classes (animation handled by inline styles) */
+.movie-card-swiper.swiping-right,
+.movie-card-swiper.swiping-left {
+  pointer-events: none;
+}
+
+
+.movie-card-preview {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 95%;
+  aspect-ratio: 2/3;
+  max-height: 95%;
+  background: #0f0f1e;
+  border-radius: 20px;
+  overflow: hidden;
+  z-index: 1;
+  opacity: 0.5;
+}
+
+.movie-card-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(5px);
+}
+
+.movie-poster-swiper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.movie-poster-swiper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.swipe-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  font-size: 2rem;
+  padding: 1rem 2rem;
+  border-radius: 15px;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.like-indicator {
+  right: 2rem;
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  border: 4px solid white;
+}
+
+.dislike-indicator {
+  left: 2rem;
+  background: rgba(244, 67, 54, 0.9);
+  color: white;
+  border: 4px solid white;
+}
+
+.indicator-icon {
+  font-size: 3rem;
+}
+
+.indicator-text {
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+
+.movie-info-swiper {
+  padding: 0.75rem 1rem;
+  color: white;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.movie-title-swiper {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.movie-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.meta-item {
+  font-size: 0.95rem;
+  color: #a0a0a0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.movie-genres {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.genre-tag {
+  background: rgba(102, 126, 234, 0.3);
+  color: #a8b7ff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.movie-overview {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #d0d0d0;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.swiper-actions {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  animation: slideUp 0.6s ease-out;
+  flex-shrink: 0;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.action-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.action-btn:hover {
+  transform: scale(1.15);
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.dislike-btn {
+  background: linear-gradient(135deg, #F44336 0%, #E91E63 100%);
+  color: white;
+}
+
+.dislike-btn:hover {
+  background: linear-gradient(135deg, #ff5a4e 0%, #f4327c 100%);
+  box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5);
+}
+
+.like-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+  color: white;
+}
+
+.like-btn:hover {
+  background: linear-gradient(135deg, #5bc55f 0%, #a0d15f 100%);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+}
+
+.btn-icon {
+  font-size: 1.75rem;
+}
+
+.btn-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .movie-swiper-container {
+    padding: 1rem;
+  }
+
+  .swiper-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .movie-counter {
+    font-size: 1rem;
+  }
+
+  .movie-title-swiper {
+    font-size: 1.4rem;
+  }
+
+  .swiper-actions {
+    gap: 1.5rem;
+  }
+
+  .action-btn {
+    width: 60px;
+    height: 60px;
+  }
+
+  .btn-icon {
+    font-size: 1.75rem;
+  }
+
+  .btn-label {
+    font-size: 0.65rem;
+  }
+
+  .swipe-indicator {
+    font-size: 1.5rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .indicator-icon {
+    font-size: 2.5rem;
+  }
+
+  .indicator-text {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .movie-info-swiper {
+    padding: 1rem;
+  }
+
+  .movie-title-swiper {
+    font-size: 1.2rem;
+  }
+
+  .movie-meta {
+    gap: 1rem;
+  }
+
+  .meta-item {
+    font-size: 0.85rem;
+  }
+
+  .genre-tag {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .movie-overview {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 3;
+  }
+
+  .swiper-actions {
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .action-btn {
+    width: 55px;
+    height: 55px;
+  }
+
+  .btn-icon {
+    font-size: 1.5rem;
+  }
+}
