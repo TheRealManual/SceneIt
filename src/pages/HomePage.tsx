@@ -240,6 +240,12 @@ const HomePage: React.FC<HomePageProps> = ({ user, preferences, setPreferences, 
       return;
     }
 
+    // Validate movieId before sending
+    if (!movie.tmdbId || isNaN(movie.tmdbId) || !isFinite(movie.tmdbId)) {
+      console.error('❌ Invalid movie ID:', movie.tmdbId);
+      return;
+    }
+
     try {
       const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
       const response = await fetch(`${backendUrl}/api/user/movies/like`, {
@@ -267,6 +273,12 @@ const HomePage: React.FC<HomePageProps> = ({ user, preferences, setPreferences, 
       return;
     }
 
+    // Validate movieId before sending
+    if (!movie.tmdbId || isNaN(movie.tmdbId) || !isFinite(movie.tmdbId)) {
+      console.error('❌ Invalid movie ID:', movie.tmdbId);
+      return;
+    }
+
     try {
       const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
       const response = await fetch(`${backendUrl}/api/user/movies/dislike`, {
@@ -291,6 +303,12 @@ const HomePage: React.FC<HomePageProps> = ({ user, preferences, setPreferences, 
   const handleFavoriteMovie = async (movie: Movie) => {
     if (!user) {
       onShowAuthPrompt();
+      return;
+    }
+
+    // Validate movieId before sending
+    if (!movie.tmdbId || isNaN(movie.tmdbId) || !isFinite(movie.tmdbId)) {
+      console.error('❌ Invalid movie ID:', movie.tmdbId);
       return;
     }
 

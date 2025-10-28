@@ -57,22 +57,29 @@ const LikedMoviesPage: React.FC<LikedMoviesPageProps> = ({
           const likedData = await likedResponse.json();
           const favoritesData = await favoritesResponse.json();
           
-          // Convert to Movie format
-          const likedMoviesFromBackend = likedData.likedMovies?.map((m: any) => ({
-            tmdbId: parseInt(m.movieId),
-            title: m.title,
-            posterPath: m.posterPath,
-            overview: '',
-            releaseDate: m.likedAt
-          })) || [];
+          console.log('📥 Backend liked data:', likedData);
+          console.log('📥 Backend favorites data:', favoritesData);
           
-          const favoriteMoviesFromBackend = favoritesData.favoriteMovies?.map((m: any) => ({
-            tmdbId: parseInt(m.movieId),
+          // Convert to Movie format and filter out NaN IDs
+          // Backend returns tmdbId directly, not movieId
+          const likedMoviesFromBackend = (likedData.likedMovies?.map((m: any) => ({
+            tmdbId: m.tmdbId || parseInt(m.movieId),
             title: m.title,
             posterPath: m.posterPath,
-            overview: '',
-            releaseDate: m.favoritedAt
-          })) || [];
+            overview: m.overview || '',
+            releaseDate: m.releaseDate || m.likedAt
+          })) || []).filter((m: Movie) => !isNaN(m.tmdbId) && isFinite(m.tmdbId));
+          
+          const favoriteMoviesFromBackend = (favoritesData.favoriteMovies?.map((m: any) => ({
+            tmdbId: m.tmdbId || parseInt(m.movieId),
+            title: m.title,
+            posterPath: m.posterPath,
+            overview: m.overview || '',
+            releaseDate: m.releaseDate || m.favoritedAt
+          })) || []).filter((m: Movie) => !isNaN(m.tmdbId) && isFinite(m.tmdbId));
+          
+          console.log('✅ Parsed liked movies:', likedMoviesFromBackend);
+          console.log('✅ Parsed favorite movies:', favoriteMoviesFromBackend);
           
           setLikedMovies(likedMoviesFromBackend);
           setFavoriteMovies(favoriteMoviesFromBackend);
@@ -93,6 +100,14 @@ const LikedMoviesPage: React.FC<LikedMoviesPageProps> = ({
 
   // Filter out favorited movies from the liked section
   const nonFavoritedLikedMovies = likedMovies.filter(m => !favoriteMovieIds.has(m.tmdbId.toString()));
+
+  console.log('=== LIKED MOVIES PAGE DEBUG ===');
+  console.log('likedMovies:', likedMovies.length);
+  console.log('favoriteMovies:', favoriteMovies.length);
+  console.log('favoriteMovieIds Set:', Array.from(favoriteMovieIds));
+  console.log('nonFavoritedLikedMovies:', nonFavoritedLikedMovies.length);
+  console.log('likedMovies IDs:', likedMovies.map(m => m.tmdbId.toString()));
+  console.log('favoriteMovies IDs:', favoriteMovies.map(m => m.tmdbId.toString()));
 
   return (
     <LikedMoviesView

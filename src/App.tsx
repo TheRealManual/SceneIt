@@ -363,6 +363,8 @@ function App() {
       
       if (response.ok) {
         setFavoriteMovieIds(prev => new Set(prev).add(movieId));
+        // Trigger refresh of movie lists
+        setMovieListRefreshTrigger(prev => prev + 1);
       }
     } catch (error) {
       console.error('Error adding to favorites:', error);
@@ -371,6 +373,10 @@ function App() {
 
   const handleRemoveFromFavorites = async (movieId: string) => {
     if (!user) return;
+    
+    console.log('=== UNFAVORITE DEBUG ===');
+    console.log('Removing favorite:', movieId);
+    console.log('favoriteMovieIds before:', Array.from(favoriteMovieIds));
     
     try {
       const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -383,7 +389,13 @@ function App() {
         setFavoriteMovieIds(prev => {
           const newSet = new Set(prev);
           newSet.delete(movieId);
+          console.log('favoriteMovieIds after:', Array.from(newSet));
           return newSet;
+        });
+        // Trigger refresh of movie lists
+        setMovieListRefreshTrigger(prev => {
+          console.log('Refresh trigger incrementing from', prev, 'to', prev + 1);
+          return prev + 1;
         });
       }
     } catch (error) {

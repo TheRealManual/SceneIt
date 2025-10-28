@@ -41,13 +41,19 @@ const DislikedMoviesPage: React.FC<DislikedMoviesPageProps> = ({
         
         if (response.ok) {
           const data = await response.json();
-          const dislikedMoviesFromBackend = data.dislikedMovies?.map((m: any) => ({
-            tmdbId: parseInt(m.movieId),
+          
+          console.log('📥 Backend disliked data:', data);
+          
+          // Backend returns tmdbId directly, not movieId
+          const dislikedMoviesFromBackend = (data.dislikedMovies?.map((m: any) => ({
+            tmdbId: m.tmdbId || parseInt(m.movieId),
             title: m.title,
             posterPath: m.posterPath,
-            overview: '',
-            releaseDate: m.dislikedAt
-          })) || [];
+            overview: m.overview || '',
+            releaseDate: m.releaseDate || m.dislikedAt
+          })) || []).filter((m: Movie) => !isNaN(m.tmdbId) && isFinite(m.tmdbId));
+          
+          console.log('✅ Parsed disliked movies:', dislikedMoviesFromBackend);
           
           setDislikedMovies(dislikedMoviesFromBackend);
         }
