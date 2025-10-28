@@ -349,7 +349,7 @@ function App() {
     }
   };
 
-  const handleAddToFavorites = async (movieId: string, title: string, posterPath: string) => {
+  const handleAddToFavorites = async (movieId: string, _title: string, _posterPath: string) => {
     if (!user) return;
     
     try {
@@ -391,7 +391,7 @@ function App() {
     }
   };
 
-  const handleMoveToDisliked = async (movieId: string, title: string, posterPath: string) => {
+  const handleMoveToDisliked = async (movieId: string, _title: string, _posterPath: string) => {
     if (!user) return;
     
     try {
@@ -426,7 +426,7 @@ function App() {
     }
   };
 
-  const handleMoveToLiked = async (movieId: string, title: string, posterPath: string) => {
+  const handleMoveToLiked = async (movieId: string, _title: string, _posterPath: string) => {
     if (!user) return;
     
     try {

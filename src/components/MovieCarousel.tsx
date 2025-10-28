@@ -23,7 +23,6 @@ interface MovieCarouselProps {
 const MovieCarousel: React.FC<MovieCarouselProps> = ({ onLike, onDislike, onFavorite }) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailedMovie, setDetailedMovie] = useState<Movie | null>(null);
 
@@ -97,27 +96,23 @@ const MovieCarousel: React.FC<MovieCarouselProps> = ({ onLike, onDislike, onFavo
         console.log('🖼️ Detailed poster path:', movieDetails.posterPath);
         
         setDetailedMovie(movieDetails);
-        setSelectedMovie(movie);
         setIsModalOpen(true);
       } else {
         console.error('❌ Failed to fetch movie details, status:', response.status);
         // Fallback to basic movie info
         setDetailedMovie(movie);
-        setSelectedMovie(movie);
         setIsModalOpen(true);
       }
     } catch (error) {
       console.error('❌ Failed to fetch movie details:', error);
       // Fallback to basic movie info
       setDetailedMovie(movie);
-      setSelectedMovie(movie);
       setIsModalOpen(true);
     }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedMovie(null);
     setDetailedMovie(null);
   };
 
