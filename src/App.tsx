@@ -232,7 +232,17 @@ function App() {
         
         if (response.ok) {
           const data = await response.json();
-          const ids = new Set<string>(data.favoriteMovies.map((m: any) => m.movieId));
+          console.log('📥 Loading favorite IDs from backend:', data.favoriteMovies);
+          // Backend returns tmdbId, not movieId
+          const ids = new Set<string>(
+            data.favoriteMovies
+              .map((m: any) => {
+                const id = m.tmdbId || m.movieId;
+                return id ? id.toString() : null;
+              })
+              .filter((id: string | null) => id !== null)
+          );
+          console.log('✅ Favorite IDs Set:', Array.from(ids));
           setFavoriteMovieIds(ids);
         }
       } catch (error) {
