@@ -25,6 +25,12 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [startX, setStartX] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Log movies received by the carousel
+  useEffect(() => {
+    console.log('🎭 MovieSwiper received movies:', movies.map(m => `${m.tmdbId} (${m.title})`));
+  }, [movies]);
 
   if (!movies || movies.length === 0) {
     return (
@@ -49,7 +55,11 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
   const currentMovie = movies[currentIndex];
 
   const handleSwipe = (direction: 'left' | 'right') => {
-    // Set swipe direction for animation
+    // Prevent multiple simultaneous swipes
+    if (isAnimating || swipeDirection) return;
+    
+    // Set animation flag and swipe direction
+    setIsAnimating(true);
     setSwipeDirection(direction);
     setIsDragging(false);
     // Keep dragOffset to continue from current position
@@ -65,6 +75,7 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
       setCurrentIndex(prev => prev + 1);
       setSwipeDirection(null);
       setDragOffset(0);
+      setIsAnimating(false);
     }, 400);
   };
 
@@ -134,6 +145,15 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
       </div>
 
       <div className="swiper-main">
+        <button
+          type="button"
+          className="side-action-btn dislike"
+          onClick={() => handleSwipe('left')}
+        >
+          <span className="btn-icon">👎</span>
+          <span className="btn-label">Pass</span>
+        </button>
+
         <div 
           className={`movie-card-swiper ${swipeDirection ? `swiping-${swipeDirection}` : ''} ${isDragging ? 'dragging' : ''}`}
           style={{
@@ -220,19 +240,10 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
             />
           </div>
         )}
-      </div>
 
-      <div className="swiper-actions">
-        <button 
-          className="action-btn dislike-btn"
-          onClick={() => handleSwipe('left')}
-        >
-          <span className="btn-icon">👎</span>
-          <span className="btn-label">Pass</span>
-        </button>
-
-        <button 
-          className="action-btn like-btn"
+        <button
+          type="button"
+          className="side-action-btn like"
           onClick={() => handleSwipe('right')}
         >
           <span className="btn-icon">❤️</span>
