@@ -1,0 +1,374 @@
+.movie-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-movie-content {
+  position: relative;
+  max-width: 900px;
+  width: 90%;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin: 0 auto;
+  cursor: default;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1) rotate(90deg);
+}
+
+.modal-movie-card {
+  position: relative;
+  display: flex;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+/* Action Buttons */
+.modal-dislike-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #F44336 0%, #EF5350 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 8px 20px rgba(244, 67, 54, 0.5);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.modal-dislike-button:hover {
+  transform: scale(1.15);
+  background: linear-gradient(135deg, #ff5a4e 0%, #ff6b65 100%);
+  box-shadow: 0 10px 30px rgba(244, 67, 54, 0.7);
+}
+
+.modal-dislike-button:active {
+  transform: scale(0.95);
+}
+
+.modal-like-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.5);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.modal-like-button:hover {
+  transform: scale(1.15);
+  background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.7);
+}
+
+.modal-like-button.liked {
+  background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
+}
+
+.modal-like-button.liked:hover {
+  transform: scale(1.15);
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.8);
+}
+
+.modal-favorite-button {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+  z-index: 10;
+  animation: slideInFav 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideInFav {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-favorite-button:hover {
+  transform: scale(1.15);
+  border-color: rgba(245, 87, 108, 0.8);
+  background: rgba(245, 87, 108, 0.2);
+}
+
+.modal-favorite-button.favorited {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+}
+
+.modal-favorite-button.favorited:hover {
+  transform: scale(1.15);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.8);
+}
+
+.modal-btn-icon,
+.modal-fav-icon {
+  display: block;
+}
+
+.modal-dislike-button.processing,
+.modal-like-button.processing,
+.modal-favorite-button.processing {
+  animation: pulse 0.6s ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* Movie Content */
+.modal-movie-poster {
+  flex-shrink: 0;
+  width: 350px;
+  height: auto;
+}
+
+.modal-movie-poster img {
+  width: 100%;
+  height: auto;
+  max-height: 600px;
+  object-fit: cover;
+  display: block;
+}
+
+.modal-movie-info {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.modal-movie-info::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-movie-info::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.modal-movie-info::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.5);
+  border-radius: 4px;
+}
+
+.modal-movie-info::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.7);
+}
+
+.modal-movie-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.modal-movie-meta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  color: #a0a0a0;
+  font-weight: 500;
+}
+
+.modal-movie-genres {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.modal-genre-tag {
+  padding: 0.5rem 1rem;
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.modal-movie-overview {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #e0e0e0;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modal-movie-card {
+    flex-direction: column;
+  }
+
+  .modal-movie-poster {
+    width: 100%;
+    max-height: 400px;
+  }
+
+  .modal-movie-info {
+    padding: 30px 20px;
+  }
+
+  .modal-movie-title {
+    font-size: 2rem;
+  }
+
+  .modal-dislike-button,
+  .modal-like-button,
+  .modal-favorite-button {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .modal-dislike-button {
+    top: 15px;
+    left: 15px;
+  }
+
+  .modal-like-button {
+    top: 15px;
+    right: 15px;
+  }
+
+  .modal-favorite-button {
+    bottom: 15px;
+    right: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-movie-content {
+    width: 95%;
+  }
+
+  .modal-close-btn {
+    top: -45px;
+    width: 35px;
+    height: 35px;
+    font-size: 1.3rem;
+  }
+
+  .modal-movie-info {
+    padding: 20px 15px;
+  }
+
+  .modal-movie-title {
+    font-size: 1.5rem;
+  }
+
+  .modal-movie-overview {
+    font-size: 1rem;
+  }
+}

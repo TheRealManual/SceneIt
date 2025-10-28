@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User } from '../types/user';
 import { userService } from '../services/user.service';
 import { movieCacheService } from '../services/movieCache.service';
+import MovieCarousel from '../components/MovieCarousel';
 
 interface MoviePreferences {
   description: string;
@@ -17,6 +18,17 @@ interface MoviePreferences {
   complexityLevel: number;
   genres: { [key: string]: number };
   language: string;
+}
+
+interface Movie {
+  tmdbId: number;
+  title: string;
+  posterPath: string;
+  overview?: string;
+  releaseDate?: string;
+  genres?: Array<{ id: number; name: string }>;
+  voteAverage?: number;
+  runtime?: number;
 }
 
 interface HomePageProps {
@@ -222,8 +234,98 @@ const HomePage: React.FC<HomePageProps> = ({ user, preferences, setPreferences, 
     }
   };
 
+  const handleLikeMovie = async (movie: Movie) => {
+    if (!user) {
+      onShowAuthPrompt();
+      return;
+    }
+
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          movieId: movie.tmdbId.toString()
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Movie liked:', movie.title);
+      } else {
+        console.error('❌ Failed to like movie');
+      }
+    } catch (error) {
+      console.error('Error saving liked movie:', error);
+    }
+  };
+
+  const handleDislikeMovie = async (movie: Movie) => {
+    if (!user) {
+      onShowAuthPrompt();
+      return;
+    }
+
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/dislike`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          movieId: movie.tmdbId.toString()
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Movie disliked:', movie.title);
+      } else {
+        console.error('❌ Failed to dislike movie');
+      }
+    } catch (error) {
+      console.error('Error saving disliked movie:', error);
+    }
+  };
+
+  const handleFavoriteMovie = async (movie: Movie) => {
+    if (!user) {
+      onShowAuthPrompt();
+      return;
+    }
+
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/favorites`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          movieId: movie.tmdbId.toString(),
+          title: movie.title,
+          posterPath: movie.posterPath
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Movie added to favorites:', movie.title);
+      } else {
+        console.error('❌ Failed to add to favorites');
+      }
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+    }
+  };
+
   return (
     <main className="preferences-container">
+      {/* Movie Carousel */}
+      <MovieCarousel 
+        onLike={handleLikeMovie}
+        onDislike={handleDislikeMovie}
+        onFavorite={handleFavoriteMovie}
+      />
+      
       <div className="preferences-form">
         <h2>Tell Us What You're Looking For</h2>
         
