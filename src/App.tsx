@@ -4,6 +4,7 @@ import LoginButton from './components/LoginButton'
 import ProfileDropdown from './components/ProfileDropdown'
 import ProfileModal from './components/ProfileModal'
 import LoadingScreen from './components/LoadingScreen'
+import AuthPromptModal from './components/AuthPromptModal'
 import { authService } from './services/auth.service'
 import { userService } from './services/user.service'
 import { User } from './types/user'
@@ -33,6 +34,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLoadingScreen, setShowLoadingScreen] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     connected: false,
@@ -330,6 +332,12 @@ function App() {
   };
 
   const handleSubmitPreferences = async () => {
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+
     console.log('%c🎬 FINDING MOVIES - START', 'background: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
     console.log('%c📋 User Preferences:', 'background: #2196F3; color: white; padding: 5px; font-weight: bold;');
     console.log(JSON.stringify(preferences, null, 2));
@@ -451,6 +459,12 @@ function App() {
   };
 
   const handleSubmitPreferencesDev = async () => {
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+
     console.log('%c🧪 DEV MODE - FINDING RANDOM MOVIES', 'background: #FF5722; color: white; padding: 10px; font-size: 16px; font-weight: bold;');
     
     // Show loading screen
@@ -810,6 +824,13 @@ function App() {
         <ProfileModal 
           user={user} 
           onClose={() => setShowProfileModal(false)} 
+        />
+      )}
+
+      {/* Auth Prompt Modal */}
+      {showAuthPrompt && (
+        <AuthPromptModal 
+          onClose={() => setShowAuthPrompt(false)} 
         />
       )}
     </div>
