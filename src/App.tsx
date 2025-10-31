@@ -359,6 +359,101 @@ function App() {
     }
   };
 
+  const handleWatch = async (movie: Movie, rating: number) => {
+    if (!user) {
+      console.log('User not logged in, cannot watch movie');
+      return;
+    }
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/watch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          movieId: movie.tmdbId.toString(),
+          rating
+        })
+      });
+      
+      if (response.ok) {
+        console.log(`Movie ${movie.title} marked as watched with rating ${rating}`);
+        // Trigger refresh of movie lists
+        setMovieListRefreshTrigger(prev => prev + 1);
+      } else {
+        const error = await response.json();
+        console.error('Error watching movie:', error);
+      }
+    } catch (error) {
+      console.error('Error saving watched movie:', error);
+    }
+  };
+
+  const handleWatchByMovieId = async (movieId: string, rating: number) => {
+    if (!user) return;
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/watch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          movieId,
+          rating
+        })
+      });
+      
+      if (response.ok) {
+        console.log(`Movie ${movieId} marked as watched with rating ${rating}`);
+        setMovieListRefreshTrigger(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Error watching movie:', error);
+    }
+  };
+
+  const handleUnwatch = async (movieId: string) => {
+    if (!user) return;
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/watch/${movieId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        console.log(`Movie ${movieId} unwatched`);
+        setMovieListRefreshTrigger(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Error unwatching movie:', error);
+    }
+  };
+
+  const handleUpdateWatchedRating = async (movieId: string, rating: number) => {
+    if (!user) return;
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/user/movies/watch/${movieId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ rating })
+      });
+      
+      if (response.ok) {
+        console.log(`Movie ${movieId} rating updated to ${rating}`);
+        setMovieListRefreshTrigger(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Error updating watched rating:', error);
+    }
+  };
+
   const handleAddToFavorites = async (movieId: string, _title: string, _posterPath: string) => {
     if (!user) return;
     
@@ -647,6 +742,12 @@ function App() {
               setPreferences={setPreferences}
               preferencesLoaded={preferencesLoaded}
               onShowAuthPrompt={() => setShowAuthPrompt(true)}
+              onWatch={handleWatch}
+              onUnwatch={handleUnwatch}
+              onUpdateWatchedRating={handleUpdateWatchedRating}
+              likedMovieIds={new Set(sessionLikedMovies.map(m => m.tmdbId.toString()))}
+              dislikedMovieIds={new Set(sessionDislikedMovies.map(m => m.tmdbId.toString()))}
+              favoriteMovieIds={favoriteMovieIds}
             />
           } 
         />
@@ -657,6 +758,7 @@ function App() {
               user={user}
               onLike={handleLike}
               onDislike={handleDislike}
+              onWatch={handleWatch}
             />
           } 
         />
@@ -684,6 +786,9 @@ function App() {
               onAddToFavorites={handleAddToFavorites}
               onRemoveFromFavorites={handleRemoveFromFavorites}
               onMoveToDisliked={handleMoveToDisliked}
+              onWatch={handleWatch}
+              onUnwatch={handleUnwatch}
+              onUpdateWatchedRating={handleUpdateWatchedRating}
               refreshTrigger={movieListRefreshTrigger}
             />
           } 
@@ -694,6 +799,9 @@ function App() {
             <DislikedMoviesPage 
               user={user}
               onMoveToLiked={handleMoveToLiked}
+              onWatch={handleWatch}
+              onUnwatch={handleUnwatch}
+              onUpdateWatchedRating={handleUpdateWatchedRating}
               refreshTrigger={movieListRefreshTrigger}
             />
           } 

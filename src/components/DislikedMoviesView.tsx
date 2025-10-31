@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './DislikedMoviesView.css';
+import StarRating from './StarRating';
+import RatingModal from './RatingModal';
 
 interface Movie {
   tmdbId: number;
   title: string;
   posterPath: string;
   releaseDate?: string;
-  overview?: string;
+  overview: string;
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
   ageRating?: string;
@@ -15,6 +17,9 @@ interface Movie {
   language?: string;
   director?: string;
   cast?: Array<{ name: string; character: string; profilePath?: string }>;
+  userRating?: number;
+  averageRating?: number;
+  ratingCount?: number;
 }
 
 interface DislikedMoviesViewProps {
@@ -24,6 +29,11 @@ interface DislikedMoviesViewProps {
   onKeepSearching?: () => void;
   showSessionActions?: boolean; // Show "Start New Search" and "Keep Searching" buttons
   showFilters?: boolean; // Show filter sidebar (default: false)
+  onWatch?: (movie: Movie, rating: number) => void;
+  onUnwatch?: (movieId: string) => void;
+  onUpdateWatchedRating?: (movieId: string, newRating: number) => void;
+  showWatchedMovies?: 'all' | 'watched' | 'unwatched';
+  onToggleShowWatched?: (filter: 'all' | 'watched' | 'unwatched') => void;
 }
 
 const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
@@ -32,9 +42,95 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
   onBackToHome,
   onKeepSearching,
   showSessionActions = false,
-  showFilters = false
+  showFilters = false,
+  onWatch,
+  onUnwatch,
+  onUpdateWatchedRating,
+  showWatchedMovies = 'all',
+  onToggleShowWatched
 }) => {
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [watchedMovies, setWatchedMovies] = useState<Map<string, number>>(new Map());
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingMovieId, setRatingMovieId] = useState<string | null>(null);
+  const [ratingMovieTitle, setRatingMovieTitle] = useState<string>('');
+  const [currentRating, setCurrentRating] = useState<number>(0);
+  const [hoveredWatchedButton, setHoveredWatchedButton] = useState<string | null>(null);
+
+  // Fetch watched movies on mount
+  useEffect(() => {
+    const fetchWatchedMovies = async () => {
+      try {
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const response = await fetch(`${backendUrl}/api/user/movies/watched`, {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const watchedMap = new Map<string, number>();
+          // Handle the correct response format: { watchedMovies: [...] }
+          if (data.watchedMovies && Array.isArray(data.watchedMovies)) {
+            data.watchedMovies.forEach((item: { tmdbId: number; userRating: number }) => {
+              watchedMap.set(item.tmdbId.toString(), item.userRating);
+            });
+          }
+          setWatchedMovies(watchedMap);
+        }
+      } catch (error) {
+        console.error('Failed to fetch watched movies:', error);
+      }
+    };
+
+    fetchWatchedMovies();
+  }, []);
+
+  const handleWatchClick = (movie: Movie) => {
+    const movieId = movie.tmdbId.toString();
+    const existingRating = watchedMovies.get(movieId);
+    setRatingMovieId(movieId);
+    setRatingMovieTitle(movie.title);
+    setCurrentRating(existingRating || 0);
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = (rating: number) => {
+    if (!ratingMovieId) return;
+
+    const movieToWatch = movies.find(m => m.tmdbId.toString() === ratingMovieId);
+    if (!movieToWatch) return;
+
+    if (watchedMovies.has(ratingMovieId)) {
+      // Update existing rating
+      onUpdateWatchedRating?.(ratingMovieId, rating);
+      setWatchedMovies(prev => {
+        const newMap = new Map(prev);
+        newMap.set(ratingMovieId, rating);
+        return newMap;
+      });
+    } else {
+      // Mark as watched with rating
+      onWatch?.(movieToWatch, rating);
+      setWatchedMovies(prev => {
+        const newMap = new Map(prev);
+        newMap.set(ratingMovieId, rating);
+        return newMap;
+      });
+    }
+
+    setShowRatingModal(false);
+    setRatingMovieId(null);
+    setRatingMovieTitle('');
+    setCurrentRating(0);
+  };
+
+  const handleUnwatchClick = (movieId: string) => {
+    onUnwatch?.(movieId);
+    setWatchedMovies(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(movieId);
+      return newMap;
+    });
+  };
   
   // Filter states
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
@@ -298,6 +394,72 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
             <option value="rating-asc">Rating (Lowest)</option>
           </select>
         </div>
+
+        {/* Show Watched Movies Toggle */}
+        {onToggleShowWatched && (
+          <div className="filter-section">
+            <h4>Filter by Watch Status</h4>
+            <div style={{
+              display: 'flex',
+              gap: '5px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              padding: '4px',
+              borderRadius: '8px'
+            }}>
+              <button
+                onClick={() => onToggleShowWatched('watched')}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: showWatchedMovies === 'watched' ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : 'transparent',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: showWatchedMovies === 'watched' ? 'bold' : 'normal',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Watched
+              </button>
+              <button
+                onClick={() => onToggleShowWatched('all')}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: showWatchedMovies === 'all' ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : 'transparent',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: showWatchedMovies === 'all' ? 'bold' : 'normal',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                All
+              </button>
+              <button
+                onClick={() => onToggleShowWatched('unwatched')}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: showWatchedMovies === 'unwatched' ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : 'transparent',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: showWatchedMovies === 'unwatched' ? 'bold' : 'normal',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Unwatched
+              </button>
+            </div>
+          </div>
+        )}
         
         {/* Genres */}
         {availableFilters.genres.length > 0 && (
@@ -496,6 +658,9 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
           const movieId = (movie.tmdbId && !isNaN(movie.tmdbId)) ? movie.tmdbId.toString() : `disliked-${index}-${movie.title}`;
           const isProcessing = processingIds.has(movieId);
           const safeKey = (movie.tmdbId && !isNaN(movie.tmdbId)) ? movie.tmdbId : `disliked-${index}-${movie.title}`;
+          const userRating = watchedMovies.get(movieId);
+          const isWatched = !!userRating;
+          const averageRating = movie.averageRating || 0;
           
           return (
             <div key={safeKey} className="movie-card">
@@ -521,6 +686,22 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
                 >
                   <span className="move-icon">→</span>
                 </button>
+                <button
+                  className={`watched-movie-button ${isWatched ? 'watched' : ''}`}
+                  onClick={() => isWatched ? handleUnwatchClick(movieId) : handleWatchClick(movie)}
+                  onMouseEnter={() => setHoveredWatchedButton(movieId)}
+                  onMouseLeave={() => setHoveredWatchedButton(null)}
+                  title={isWatched ? 'Unwatch movie' : 'Mark as watched'}
+                >
+                  <span className="watched-icon">🎬</span>
+                  <div className={`rating-wrapper ${isWatched || (hoveredWatchedButton === movieId && averageRating > 0) ? 'show' : ''}`}>
+                    {isWatched ? (
+                      <StarRating rating={userRating} size="small" />
+                    ) : hoveredWatchedButton === movieId && averageRating > 0 ? (
+                      <StarRating rating={averageRating} size="small" />
+                    ) : null}
+                  </div>
+                </button>
               </div>
             </div>
           );
@@ -540,6 +721,15 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
         </div>
       )}
       </div>
+
+      {showRatingModal && (
+        <RatingModal
+          movieTitle={ratingMovieTitle}
+          initialRating={currentRating}
+          onSubmit={handleRatingSubmit}
+          onClose={() => setShowRatingModal(false)}
+        />
+      )}
     </div>
   );
 };

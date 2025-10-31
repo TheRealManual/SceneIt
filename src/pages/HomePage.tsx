@@ -24,7 +24,7 @@ interface Movie {
   tmdbId: number;
   title: string;
   posterPath: string;
-  overview?: string;
+  overview: string;
   releaseDate?: string;
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
@@ -37,9 +37,27 @@ interface HomePageProps {
   setPreferences: React.Dispatch<React.SetStateAction<MoviePreferences>>;
   preferencesLoaded: boolean;
   onShowAuthPrompt: () => void;
+  onWatch?: (movie: Movie, rating: number) => void;
+  onUnwatch?: (movieId: string) => void;
+  onUpdateWatchedRating?: (movieId: string, rating: number) => void;
+  likedMovieIds?: Set<string>;
+  dislikedMovieIds?: Set<string>;
+  favoriteMovieIds?: Set<string>;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ user, preferences, setPreferences, preferencesLoaded, onShowAuthPrompt }) => {
+const HomePage: React.FC<HomePageProps> = ({ 
+  user, 
+  preferences, 
+  setPreferences, 
+  preferencesLoaded, 
+  onShowAuthPrompt,
+  onWatch,
+  onUnwatch,
+  onUpdateWatchedRating,
+  likedMovieIds,
+  dislikedMovieIds,
+  favoriteMovieIds
+}) => {
   const navigate = useNavigate();
   const [isPreloading, setIsPreloading] = useState(false);
   const preloadAbortController = useRef<AbortController | null>(null);
@@ -342,6 +360,12 @@ const HomePage: React.FC<HomePageProps> = ({ user, preferences, setPreferences, 
         onLike={handleLikeMovie}
         onDislike={handleDislikeMovie}
         onFavorite={handleFavoriteMovie}
+        onWatch={onWatch}
+        onUnwatch={onUnwatch}
+        onUpdateWatchedRating={onUpdateWatchedRating}
+        likedMovieIds={likedMovieIds}
+        dislikedMovieIds={dislikedMovieIds}
+        favoriteMovieIds={favoriteMovieIds}
       />
       
       <div className="preferences-form">

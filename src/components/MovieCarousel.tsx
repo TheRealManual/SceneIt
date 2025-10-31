@@ -7,7 +7,7 @@ interface Movie {
   tmdbId: number;
   title: string;
   posterPath: string;
-  overview?: string;
+  overview: string;
   releaseDate?: string;
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
@@ -18,13 +18,83 @@ interface MovieCarouselProps {
   onLike?: (movie: Movie) => void;
   onDislike?: (movie: Movie) => void;
   onFavorite?: (movie: Movie) => void;
+  onWatch?: (movie: Movie, rating: number) => void;
+  onUnwatch?: (movieId: string) => void;
+  onUpdateWatchedRating?: (movieId: string, rating: number) => void;
+  likedMovieIds?: Set<string>;
+  dislikedMovieIds?: Set<string>;
+  favoriteMovieIds?: Set<string>;
 }
 
-const MovieCarousel: React.FC<MovieCarouselProps> = ({ onLike, onDislike, onFavorite }) => {
+const MovieCarousel: React.FC<MovieCarouselProps> = ({ 
+  onLike, 
+  onDislike, 
+  onFavorite,
+  onWatch,
+  onUnwatch,
+  onUpdateWatchedRating,
+  likedMovieIds,
+  dislikedMovieIds,
+  favoriteMovieIds
+}) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailedMovie, setDetailedMovie] = useState<Movie | null>(null);
+  const [localLikedIds, setLocalLikedIds] = useState<Set<string>>(new Set());
+  const [localDislikedIds, setLocalDislikedIds] = useState<Set<string>>(new Set());
+  const [localFavoriteIds, setLocalFavoriteIds] = useState<Set<string>>(new Set());
+  const [localWatchedRatings, setLocalWatchedRatings] = useState<Map<string, number>>(new Map());
+
+  // Sync local state with props (merge instead of replace)
+  useEffect(() => {
+    if (likedMovieIds) {
+      setLocalLikedIds(prev => {
+        const merged = new Set(prev);
+        likedMovieIds.forEach(id => merged.add(id));
+        return merged;
+      });
+    }
+    if (dislikedMovieIds) {
+      setLocalDislikedIds(prev => {
+        const merged = new Set(prev);
+        dislikedMovieIds.forEach(id => merged.add(id));
+        return merged;
+      });
+    }
+    if (favoriteMovieIds) {
+      setLocalFavoriteIds(prev => {
+        const merged = new Set(prev);
+        favoriteMovieIds.forEach(id => merged.add(id));
+        return merged;
+      });
+    }
+  }, [likedMovieIds, dislikedMovieIds, favoriteMovieIds]);
+
+  // Fetch watched movies on mount
+  useEffect(() => {
+    const fetchWatchedMovies = async () => {
+      try {
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+        const response = await fetch(`${backendUrl}/api/user/movies/watched`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const ratingsMap = new Map<string, number>();
+          data.watchedMovies?.forEach((movie: any) => {
+            ratingsMap.set(movie.tmdbId.toString(), movie.userRating);
+          });
+          setLocalWatchedRatings(ratingsMap);
+        }
+      } catch (error) {
+        console.error('Failed to fetch watched movies:', error);
+      }
+    };
+
+    fetchWatchedMovies();
+  }, []);
 
   useEffect(() => {
     // Fetch random movies for carousel
@@ -119,18 +189,80 @@ const MovieCarousel: React.FC<MovieCarouselProps> = ({ onLike, onDislike, onFavo
   const handleLike = async (movie: Movie) => {
     if (onLike) {
       await onLike(movie);
+      // Update local state immediately
+      setLocalLikedIds(prev => new Set(prev).add(movie.tmdbId.toString()));
+      setLocalDislikedIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(movie.tmdbId.toString());
+        return newSet;
+      });
     }
   };
 
   const handleDislike = async (movie: Movie) => {
     if (onDislike) {
       await onDislike(movie);
+      // Update local state immediately
+      setLocalDislikedIds(prev => new Set(prev).add(movie.tmdbId.toString()));
+      setLocalLikedIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(movie.tmdbId.toString());
+        return newSet;
+      });
+      // Remove from favorites when disliking
+      setLocalFavoriteIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(movie.tmdbId.toString());
+        return newSet;
+      });
     }
   };
 
   const handleFavorite = async (movie: Movie) => {
     if (onFavorite) {
+      const movieId = movie.tmdbId.toString();
+      const wasFavorited = localFavoriteIds.has(movieId);
+      
       await onFavorite(movie);
+      
+      // Toggle favorite in local state
+      if (wasFavorited) {
+        setLocalFavoriteIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(movieId);
+          return newSet;
+        });
+      } else {
+        setLocalFavoriteIds(prev => new Set(prev).add(movieId));
+      }
+    }
+  };
+
+  const handleWatch = async (movie: Movie, rating: number) => {
+    if (onWatch) {
+      await onWatch(movie, rating);
+      // Update local state immediately
+      setLocalWatchedRatings(prev => new Map(prev).set(movie.tmdbId.toString(), rating));
+    }
+  };
+
+  const handleUnwatch = async (movieId: string) => {
+    if (onUnwatch) {
+      await onUnwatch(movieId);
+      // Update local state immediately
+      setLocalWatchedRatings(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(movieId);
+        return newMap;
+      });
+    }
+  };
+
+  const handleUpdateWatchedRating = async (movieId: string, rating: number) => {
+    if (onUpdateWatchedRating) {
+      await onUpdateWatchedRating(movieId, rating);
+      // Update local state immediately
+      setLocalWatchedRatings(prev => new Map(prev).set(movieId, rating));
     }
   };
 
@@ -174,6 +306,13 @@ const MovieCarousel: React.FC<MovieCarouselProps> = ({ onLike, onDislike, onFavo
           onLike={handleLike}
           onDislike={handleDislike}
           onFavorite={handleFavorite}
+          onWatch={handleWatch}
+          onUnwatch={handleUnwatch}
+          onUpdateWatchedRating={handleUpdateWatchedRating}
+          isLiked={localLikedIds.has(detailedMovie.tmdbId.toString())}
+          isDisliked={localDislikedIds.has(detailedMovie.tmdbId.toString())}
+          isFavorited={localFavoriteIds.has(detailedMovie.tmdbId.toString())}
+          userRating={localWatchedRatings.get(detailedMovie.tmdbId.toString())}
         />
       )}
     </>

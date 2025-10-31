@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import './MovieModal.css';
+import RatingModal from './RatingModal';
+import StarRating from './StarRating';
 
 interface Movie {
   tmdbId: number;
   title: string;
   posterPath: string;
-  overview?: string;
+  overview: string;
   releaseDate?: string;
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
@@ -19,8 +21,14 @@ interface MovieModalProps {
   onLike: (movie: Movie) => void;
   onDislike: (movie: Movie) => void;
   onFavorite?: (movie: Movie) => void;
+  onWatch?: (movie: Movie, rating: number) => void;
+  onUnwatch?: (movieId: string) => void;
+  onUpdateWatchedRating?: (movieId: string, rating: number) => void;
   isFavorited?: boolean;
   isLiked?: boolean;
+  isDisliked?: boolean;
+  userRating?: number;
+  averageRating?: number;
 }
 
 const MovieModal: React.FC<MovieModalProps> = ({
@@ -30,12 +38,22 @@ const MovieModal: React.FC<MovieModalProps> = ({
   onLike,
   onDislike,
   onFavorite,
+  onWatch,
+  onUnwatch,
+  onUpdateWatchedRating,
   isFavorited = false,
-  isLiked = false
+  isLiked = false,
+  isDisliked = false,
+  userRating,
+  averageRating
 }) => {
   const [localIsLiked, setLocalIsLiked] = useState(isLiked);
+  const [localIsDisliked, setLocalIsDisliked] = useState(isDisliked);
   const [localIsFavorited, setLocalIsFavorited] = useState(isFavorited);
+  const [localUserRating, setLocalUserRating] = useState(userRating);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [hoveredWatchedButton, setHoveredWatchedButton] = useState(false);
 
   // Prevent body scroll when modal is open and scroll to top
   useEffect(() => {
@@ -48,6 +66,14 @@ const MovieModal: React.FC<MovieModalProps> = ({
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  // Sync local state with props when they change
+  useEffect(() => {
+    setLocalIsLiked(isLiked);
+    setLocalIsDisliked(isDisliked);
+    setLocalIsFavorited(isFavorited);
+    setLocalUserRating(userRating);
+  }, [isLiked, isDisliked, isFavorited, userRating]);
 
   if (!isOpen) return null;
 
@@ -73,9 +99,8 @@ const MovieModal: React.FC<MovieModalProps> = ({
     if (isProcessing) return;
     setIsProcessing(true);
     await onDislike(movie);
+    setLocalIsDisliked(true);
     setIsProcessing(false);
-    // Close modal after disliking
-    setTimeout(() => onClose(), 300);
   };
 
   const handleFavorite = async () => {
@@ -84,6 +109,45 @@ const MovieModal: React.FC<MovieModalProps> = ({
     await onFavorite(movie);
     setLocalIsFavorited(!localIsFavorited);
     setIsProcessing(false);
+  };
+
+  const handleWatchClick = () => {
+    // Show modal to add or update rating
+    setShowRatingModal(true);
+  };
+
+  const handleUnwatchClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onUnwatch && localUserRating) {
+      onUnwatch(movie.tmdbId.toString());
+      setLocalUserRating(undefined);
+    }
+  };
+
+  const handleRatingSubmit = (rating: number, preference?: 'like' | 'dislike') => {
+    if (localUserRating && onUpdateWatchedRating) {
+      // Update existing rating
+      onUpdateWatchedRating(movie.tmdbId.toString(), rating);
+      setLocalUserRating(rating);
+    } else if (onWatch) {
+      // Add new watched movie
+      onWatch(movie, rating);
+      setLocalUserRating(rating);
+      
+      // Handle preference selection if provided
+      if (preference === 'like' && !localIsLiked && !localIsDisliked) {
+        onLike(movie);
+        setLocalIsLiked(true);
+      } else if (preference === 'dislike' && !localIsLiked && !localIsDisliked) {
+        onDislike(movie);
+        setLocalIsDisliked(true);
+      }
+    }
+    setShowRatingModal(false);
+  };
+
+  const handleRatingCancel = () => {
+    setShowRatingModal(false);
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -110,9 +174,9 @@ const MovieModal: React.FC<MovieModalProps> = ({
         <div className="modal-movie-card">
           {/* Dislike Button - Top Left */}
           <button
-            className={`modal-dislike-button ${isProcessing ? 'processing' : ''}`}
+            className={`modal-dislike-button ${localIsDisliked ? 'disliked' : ''} ${isProcessing ? 'processing' : ''}`}
             onClick={handleDislike}
-            disabled={isProcessing}
+            disabled={isProcessing || localIsDisliked}
             title="Dislike this movie"
           >
             <span className="modal-btn-icon">👎</span>
@@ -139,6 +203,24 @@ const MovieModal: React.FC<MovieModalProps> = ({
               <span className="modal-fav-icon">{localIsFavorited ? '❤️' : '🤍'}</span>
             </button>
           )}
+
+          {/* Watched Button - Bottom Right, moves left when favorite shows */}
+          <button
+            className={`modal-watched-button ${localUserRating ? 'watched' : ''}`}
+            onClick={(e) => localUserRating ? handleUnwatchClick(e) : handleWatchClick()}
+            onMouseEnter={() => setHoveredWatchedButton(true)}
+            onMouseLeave={() => setHoveredWatchedButton(false)}
+            title={localUserRating ? 'Click to unwatch' : 'Mark as watched'}
+          >
+            <span className="modal-watched-icon">🎬</span>
+            <div className={`rating-wrapper ${localUserRating || (hoveredWatchedButton && averageRating) ? 'show' : ''}`}>
+              {localUserRating ? (
+                <StarRating rating={localUserRating} size="small" />
+              ) : hoveredWatchedButton && averageRating ? (
+                <StarRating rating={averageRating} size="small" />
+              ) : null}
+            </div>
+          </button>
 
           <div className="modal-movie-poster">
             <img 
@@ -183,6 +265,19 @@ const MovieModal: React.FC<MovieModalProps> = ({
 
             <p className="modal-movie-overview">{movie.overview}</p>
           </div>
+
+          {/* Rating Modal - inside card for proper positioning */}
+          {showRatingModal && (
+            <div className="nested-rating-modal-container">
+              <RatingModal
+                movieTitle={movie.title}
+                initialRating={localUserRating}
+                onSubmit={handleRatingSubmit}
+                onClose={handleRatingCancel}
+                showPreference={!localIsLiked && !localIsDisliked}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

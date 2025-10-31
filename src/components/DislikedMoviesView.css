@@ -318,6 +318,57 @@
   z-index: 10;
 }
 
+.watched-movie-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.watched-movie-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.05);
+}
+
+.watched-movie-button.watched {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+}
+
+.watched-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: margin-right 0.3s ease;
+}
+
+/* Star rating container with slide-in animation */
+.watched-movie-button .rating-wrapper {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-width 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.watched-movie-button .rating-wrapper.show {
+  max-width: 80px;
+  opacity: 1;
+}
+
 .move-to-liked-button:hover {
   transform: scale(1.15);
   background: linear-gradient(135deg, #5bc55f 0%, #7bd67f 100%);

@@ -19,9 +19,10 @@ interface SearchPageProps {
   user: User | null;
   onLike: (movie: Movie) => void;
   onDislike: (movie: Movie) => void;
+  onWatch?: (movie: Movie, rating: number) => void;
 }
 
-const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike }) => {
+const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatch }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -148,6 +149,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike }) => {
       movies={movies}
       onLike={onLike}
       onDislike={onDislike}
+      onWatch={onWatch}
       onFinish={handleFinishSwiping}
     />
   );
