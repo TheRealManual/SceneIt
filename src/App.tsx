@@ -390,30 +390,6 @@ function App() {
     }
   };
 
-  const handleWatchByMovieId = async (movieId: string, rating: number) => {
-    if (!user) return;
-    
-    try {
-      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
-      const response = await fetch(`${backendUrl}/api/user/movies/watch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          movieId,
-          rating
-        })
-      });
-      
-      if (response.ok) {
-        console.log(`Movie ${movieId} marked as watched with rating ${rating}`);
-        setMovieListRefreshTrigger(prev => prev + 1);
-      }
-    } catch (error) {
-      console.error('Error watching movie:', error);
-    }
-  };
-
   const handleUnwatch = async (movieId: string) => {
     if (!user) return;
     
