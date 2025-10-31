@@ -97,7 +97,7 @@
 .modal-dislike-button {
   position: absolute;
   top: 20px;
-  left: 20px;
+  right: 100px;
   width: 60px;
   height: 60px;
   border-radius: 50%;

@@ -109,10 +109,12 @@
 
 /* Main Content */
 .preferences-container {
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 1rem;
   animation: slideInFromBottom 1s ease-out 0.6s both;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+  min-height: 100vh;
 }
 
 @keyframes slideInFromBottom {
@@ -127,45 +129,76 @@
 }
 
 .preferences-form {
-  background: linear-gradient(180deg, #1a1a1a 0%, #0e0e0e 100%);
-  border-radius: 20px;
-  padding: 1.5rem;
-  box-shadow: 0 0 15px var(--netflix-glow-red), 
-              0 20px 40px var(--netflix-card-shadow),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid var(--netflix-soft-red);
+  background: linear-gradient(145deg, rgba(22, 22, 33, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%);
+  border-radius: 16px;
+  padding: 1.4rem;
+  box-shadow: 0 8px 32px rgba(229, 9, 20, 0.15),
+              0 0 0 1px rgba(229, 9, 20, 0.1),
+              0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(229, 9, 20, 0.2);
   position: relative;
-  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  margin-top: 1rem;
 }
 
-.preferences-form:hover {
-  box-shadow: 0 0 25px var(--netflix-glow-red), 
-              0 25px 50px var(--netflix-card-shadow),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+.preferences-form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--netflix-red), transparent);
+  border-radius: 20px 20px 0 0;
+  pointer-events: none;
 }
 
 .preferences-form h2 {
   color: var(--netflix-white);
-  font-size: 2.2rem;
+  font-size: 1.6rem;
   text-align: center;
-  margin-bottom: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  margin-bottom: 1.2rem;
+  text-shadow: 0 2px 20px rgba(229, 9, 20, 0.4),
+               2px 2px 8px rgba(0, 0, 0, 0.8);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, #e50914 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Form Sections */
 .form-section {
-  margin-bottom: 2.5rem;
-  padding: 1.5rem;
-  background: linear-gradient(180deg, rgba(26, 26, 26, 0.8) 0%, rgba(14, 14, 14, 0.8) 100%);
-  border-radius: 15px;
-  border: 1px solid var(--netflix-soft-red);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 
-              0 0 10px var(--netflix-glow-red);
-  transition: all 0.3s ease;
+  margin-bottom: 1.2rem;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, rgba(30, 30, 45, 0.6) 0%, rgba(20, 20, 35, 0.8) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(229, 9, 20, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeInUp 0.6s ease-out both;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(229, 9, 20, 0.05) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.form-section:hover::before {
+  opacity: 1;
 }
 
 .form-section:nth-child(2) { animation-delay: 0.1s; }
@@ -192,31 +225,48 @@
 }
 
 .form-section:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 
-              0 0 15px var(--netflix-glow-red);
-  border-color: var(--netflix-red);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4),
+              0 0 20px rgba(229, 9, 20, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(229, 9, 20, 0.3);
 }
 
 .form-section h3 {
   color: var(--netflix-red);
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  margin-bottom: 1.2rem;
   text-align: center;
-  border-bottom: 1px solid var(--netflix-soft-red);
-  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(229, 9, 20, 0.3);
+  padding-bottom: 0.6rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  text-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+  text-shadow: 0 0 15px rgba(229, 9, 20, 0.4),
+               0 2px 4px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.form-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--netflix-red), transparent);
 }
 
 .form-section label {
   display: block;
-  color: var(--netflix-white);
+  color: #e0e0e0;
   font-weight: 500;
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
   transition: color 0.3s ease;
+  letter-spacing: 0.01em;
+  position: relative;
+  z-index: 1;
 }
 
 /* Movie Description Textarea */
@@ -224,56 +274,60 @@
   width: 100%;
   max-width: 100%;
   min-height: 120px;
-  background: linear-gradient(180deg, var(--netflix-black) 0%, #0a0a0a 100%);
-  border: 1px solid var(--netflix-soft-red);
+  background: linear-gradient(135deg, rgba(15, 15, 25, 0.9) 0%, rgba(10, 10, 20, 0.95) 100%);
+  border: 2px solid rgba(229, 9, 20, 0.2);
   border-radius: 10px;
-  padding: 1rem;
+  padding: 0.8rem;
   color: var(--netflix-white);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-family: inherit;
   font-weight: 400;
   resize: none;
-  transition: all 0.3s ease;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 
-              0 0 5px var(--netflix-glow-red);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4),
+              0 2px 8px rgba(229, 9, 20, 0.1);
   box-sizing: border-box;
   overflow-y: hidden;
-  line-height: 1.5;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
 }
 
 .movie-description:focus {
   outline: none;
   border-color: var(--netflix-red);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 
-              0 0 15px var(--netflix-red-shadow);
-  transform: scale(1.01);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4),
+              0 0 20px rgba(229, 9, 20, 0.3),
+              0 4px 12px rgba(229, 9, 20, 0.2);
+  transform: scale(1.005);
+  background: linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%);
 }
 
 .movie-description::placeholder {
-  color: var(--netflix-accent-grey);
-  opacity: 0.7;
+  color: rgba(160, 160, 180, 0.6);
+  opacity: 1;
   font-weight: 400;
 }
 
 /* Slider Grids */
 .sliders-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.8rem;
 }
 
 .genre-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
 }
 
 .slider-group {
   background: linear-gradient(180deg, var(--netflix-black) 0%, #0a0a0a 100%);
-  padding: 1rem;
-  border-radius: 10px;
+  padding: 0.8rem;
+  border-radius: 8px;
   border: 1px solid var(--netflix-soft-red);
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 
@@ -366,9 +420,9 @@
   background: linear-gradient(180deg, var(--netflix-black) 0%, #0a0a0a 100%);
   border: 1px solid var(--netflix-soft-red);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.6rem;
   color: var(--netflix-white);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -401,9 +455,9 @@
   display: flex;
   justify-content: center;
   gap: 1.5rem;
-  margin-top: 3rem;
+  margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid var(--netflix-soft-red);
+  border-top: 2px solid rgba(229, 9, 20, 0.2);
   animation: fadeInUp 0.8s ease-out 1s both;
   flex-wrap: wrap;
 }
@@ -412,54 +466,56 @@
   padding: 1rem 2rem;
   border: none;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   min-width: 150px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .clear-button {
-  background: linear-gradient(45deg, var(--netflix-medium-grey), var(--netflix-light-grey));
-  color: var(--netflix-white);
-  border: 1px solid var(--netflix-soft-red);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(60, 60, 80, 0.8), rgba(40, 40, 60, 0.9));
+  color: #e0e0e0;
+  border: 2px solid rgba(229, 9, 20, 0.3);
 }
 
 .clear-button:hover {
-  background: linear-gradient(45deg, var(--netflix-light-grey), var(--netflix-hover-grey));
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 
-              0 0 10px rgba(128, 128, 128, 0.5);
-  border-color: var(--netflix-white);
+  background: linear-gradient(135deg, rgba(70, 70, 90, 0.9), rgba(50, 50, 70, 1));
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4),
+              0 0 15px rgba(229, 9, 20, 0.2);
+  border-color: rgba(229, 9, 20, 0.5);
+  color: var(--netflix-white);
 }
 
 .clear-button:active {
-  transform: translateY(-1px) scale(1.01);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .submit-button {
-  background: linear-gradient(45deg, var(--netflix-red), var(--netflix-dark-red));
+  background: linear-gradient(135deg, #e50914, #b20710);
   color: var(--netflix-white);
-  border: 1px solid var(--netflix-white);
-  box-shadow: 0 4px 15px var(--netflix-red-shadow), 
-              0 0 10px var(--netflix-glow-red);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(229, 9, 20, 0.4),
+              0 0 15px rgba(229, 9, 20, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .submit-button:hover {
-  background: linear-gradient(45deg, var(--netflix-dark-red), var(--netflix-red));
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 8px 30px var(--netflix-red-shadow), 
-              0 0 20px rgba(229, 9, 20, 0.6);
-  border-color: var(--netflix-light-white);
+  background: linear-gradient(135deg, #f5151f, #e50914);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 35px rgba(229, 9, 20, 0.6),
+              0 0 30px rgba(229, 9, 20, 0.4);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .submit-button:active {
-  transform: translateY(-1px) scale(1.01);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .clear-button::before, .submit-button::before, .dev-button::before {
