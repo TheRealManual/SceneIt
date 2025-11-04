@@ -1,3 +1,9 @@
+.login-buttons-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .login-button {
   display: flex;
   align-items: center;
@@ -30,6 +36,34 @@
   flex-shrink: 0;
 }
 
+.dev-login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  white-space: nowrap;
+}
+
+.dev-login-button:hover {
+  background: linear-gradient(135deg, #FF8C42 0%, #FFA756 100%);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.5);
+  transform: translateY(-2px);
+}
+
+.dev-login-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
 @media (max-width: 768px) {
   .login-button span {
     display: none;
@@ -38,4 +72,10 @@
   .login-button {
     padding: 0.65rem;
   }
+
+  .dev-login-button {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+  }
 }
+

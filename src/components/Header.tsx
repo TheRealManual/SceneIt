@@ -9,6 +9,7 @@ interface HeaderProps {
   onLogout: () => void;
   onViewProfile: () => void;
   onLogin: () => void;
+  onDevLogin?: () => void;
   onLogoClick: () => void;
   onViewLikedMovies?: () => void;
   onViewDislikedMovies?: () => void;
@@ -21,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({
   onLogout,
   onViewProfile,
   onLogin,
+  onDevLogin,
   onLogoClick,
   onViewLikedMovies,
   onViewDislikedMovies,
@@ -62,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({
               onViewProfile={onViewProfile}
             />
           ) : (
-            <LoginButton onLogin={onLogin} />
+            <LoginButton onLogin={onLogin} onDevLogin={onDevLogin} />
           )}
         </div>
       </div>

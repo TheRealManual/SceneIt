@@ -17,6 +17,11 @@ export const authService = {
     }
   },
 
+  // Direct dev login (for testing in production)
+  loginWithDev: () => {
+    window.location.href = `${API_URL}/auth/dev-login`;
+  },
+
   // Get current user session
   getCurrentUser: async (): Promise<User | null> => {
     try {

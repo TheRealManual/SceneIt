@@ -257,6 +257,10 @@ function App() {
     authService.loginWithGoogle();
   };
 
+  const handleDevLogin = () => {
+    authService.loginWithDev();
+  };
+
   const handleLogout = async () => {
     if (user) {
       try {
@@ -701,6 +705,7 @@ function App() {
         onLogout={handleLogout}
         onViewProfile={handleViewProfile}
         onLogin={handleLogin}
+        onDevLogin={handleDevLogin}
         onLogoClick={handleLogoClick}
         onViewLikedMovies={handleViewLikedMovies}
         onViewDislikedMovies={handleViewDislikedMovies}
