@@ -4,9 +4,23 @@ import './ProfileModal.css';
 interface ProfileModalProps {
   user: User;
   onClose: () => void;
+  onClearLikedMovies: () => Promise<void>;
+  onClearDislikedMovies: () => Promise<void>;
 }
 
-function ProfileModal({ user, onClose }: ProfileModalProps) {
+function ProfileModal({ user, onClose, onClearLikedMovies, onClearDislikedMovies }: ProfileModalProps) {
+  const handleClearLiked = async () => {
+    if (window.confirm('Are you sure you want to clear all liked movies? This action cannot be undone.')) {
+      await onClearLikedMovies();
+    }
+  };
+
+  const handleClearDisliked = async () => {
+    if (window.confirm('Are you sure you want to clear all disliked movies? This action cannot be undone.')) {
+      await onClearDislikedMovies();
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -57,6 +71,22 @@ function ProfileModal({ user, onClose }: ProfileModalProps) {
                   Google
                 </div>
               </span>
+            </div>
+          </div>
+
+          <div className="profile-actions-section">
+            <h3>Movie Lists</h3>
+            
+            <div className="profile-actions">
+              <button className="profile-action-btn clear-liked" onClick={handleClearLiked}>
+                <span className="action-icon">🗑️</span>
+                Clear Liked Movies
+              </button>
+              
+              <button className="profile-action-btn clear-disliked" onClick={handleClearDisliked}>
+                <span className="action-icon">🗑️</span>
+                Clear Disliked Movies
+              </button>
             </div>
           </div>
         </div>

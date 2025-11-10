@@ -9,9 +9,12 @@ interface HeaderProps {
   onLogout: () => void;
   onViewProfile: () => void;
   onLogin: () => void;
+  onDevLogin?: () => void;
   onLogoClick: () => void;
   onViewLikedMovies?: () => void;
   onViewDislikedMovies?: () => void;
+  onPreloadLikedMovies?: () => void;
+  onPreloadDislikedMovies?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -19,9 +22,12 @@ const Header: React.FC<HeaderProps> = ({
   onLogout,
   onViewProfile,
   onLogin,
+  onDevLogin,
   onLogoClick,
   onViewLikedMovies,
-  onViewDislikedMovies
+  onViewDislikedMovies,
+  onPreloadLikedMovies,
+  onPreloadDislikedMovies
 }) => {
   return (
     <header className="App-header">
@@ -33,10 +39,18 @@ const Header: React.FC<HeaderProps> = ({
         <div className="header-center">
           {user && (
             <>
-              <button className="header-nav-btn liked-btn" onClick={onViewLikedMovies}>
+              <button 
+                className="header-nav-btn liked-btn" 
+                onClick={onViewLikedMovies}
+                onMouseEnter={onPreloadLikedMovies}
+              >
                 ❤️ Liked Movies
               </button>
-              <button className="header-nav-btn disliked-btn" onClick={onViewDislikedMovies}>
+              <button 
+                className="header-nav-btn disliked-btn" 
+                onClick={onViewDislikedMovies}
+                onMouseEnter={onPreloadDislikedMovies}
+              >
                 👎 Disliked Movies
               </button>
             </>
@@ -50,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({
               onViewProfile={onViewProfile}
             />
           ) : (
-            <LoginButton onLogin={onLogin} />
+            <LoginButton onLogin={onLogin} onDevLogin={onDevLogin} />
           )}
         </div>
       </div>
