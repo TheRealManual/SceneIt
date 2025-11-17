@@ -70,6 +70,10 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [hoveredWatchedButton, setHoveredWatchedButton] = useState<string | null>(null);
   
+  // Email states
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [emailMessage, setEmailMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
   // Filter states
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
   const [selectedYearRange, setSelectedYearRange] = useState<[number, number] | null>(null);
@@ -437,6 +441,52 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
       newMap.delete(movieId);
       return newMap;
     });
+  };
+
+  // Email liked movies function
+  const handleEmailLikedMovies = async () => {
+    setIsEmailLoading(true);
+    setEmailMessage(null);
+
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/email/send-liked-movies`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setEmailMessage({ 
+          type: 'success', 
+          text: 'Email sent successfully!' 
+        });
+        
+        // If there's a preview URL (for test mode), log it
+        if (result.previewURL) {
+          console.log('📧 Email preview URL:', result.previewURL);
+        }
+      } else {
+        const errorData = await response.json();
+        setEmailMessage({ 
+          type: 'error', 
+          text: errorData.error || 'Failed to send email' 
+        });
+      }
+    } catch (error) {
+      console.error('Email error:', error);
+      setEmailMessage({ 
+        type: 'error', 
+        text: 'Failed to send email. Please try again.' 
+      });
+    } finally {
+      setIsEmailLoading(false);
+      // Clear message after 3 seconds
+      setTimeout(() => setEmailMessage(null), 3000);
+    }
   };
 
   // Fetch watched movies on component mount
@@ -820,8 +870,24 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
         {/* Liked Movies Section */}
         <div className="liked-section">
           <div className="section-header">
-            <h2 className="section-title">❤️ Movies You Liked</h2>
-            <p className="section-count">{filteredMovies.length} {filteredMovies.length === 1 ? 'movie' : 'movies'}</p>
+            <div className="section-header-left">
+              <h2 className="section-title">❤️ Movies You Liked</h2>
+              <p className="section-count">{filteredMovies.length} {filteredMovies.length === 1 ? 'movie' : 'movies'}</p>
+            </div>
+            <div className="section-header-right">
+              {emailMessage && (
+                <span className={`email-message ${emailMessage.type}`}>
+                  {emailMessage.text}
+                </span>
+              )}
+              <button 
+                onClick={handleEmailLikedMovies}
+                disabled={isEmailLoading || filteredMovies.length === 0}
+                className="email-liked-movies-btn"
+              >
+                {isEmailLoading ? 'Sending...' : '✉️ Email My Movies'}
+              </button>
+            </div>
           </div>
 
       <div className="liked-movies-grid">
