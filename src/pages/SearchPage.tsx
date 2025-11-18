@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MovieSwiper from '../components/MovieSwiper';
+import GameRatingModal from '../components/GameRatingModal';
 import LoadingScreen from '../components/LoadingScreen';
 import { User } from '../types/user';
 
@@ -27,6 +28,8 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
   const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showGameRating, setShowGameRating] = useState(false);
+  const [shouldShowRating, setShouldShowRating] = useState(false);
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
@@ -126,6 +129,8 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
         navigate('/');
       } finally {
         setLoading(false);
+        // 50% chance to show rating modal
+        setShouldShowRating(Math.random() < 0.5);
       }
     };
 
@@ -133,6 +138,43 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
   }, [location.state, navigate, user]);
 
   const handleFinishSwiping = () => {
+    if (shouldShowRating) {
+      setShowGameRating(true);
+    } else {
+      navigate('/summary');
+    }
+  };
+
+  const handleSubmitRating = async (rating: number, movieFeedback: { [movieId: number]: 'good' | 'bad' }) => {
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      
+      const response = await fetch(`${backendUrl}/api/game-rating/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          overallRating: rating,
+          movieFeedback: movieFeedback,
+          gameMovies: movies.map(m => m.tmdbId)
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Game rating submitted successfully');
+      } else {
+        console.error('Failed to submit game rating');
+      }
+    } catch (error) {
+      console.error('Error submitting game rating:', error);
+    } finally {
+      navigate('/summary');
+    }
+  };
+
+  const handleSkipRating = () => {
     navigate('/summary');
   };
 
@@ -145,13 +187,23 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
   }
 
   return (
-    <MovieSwiper
-      movies={movies}
-      onLike={onLike}
-      onDislike={onDislike}
-      onWatch={onWatch}
-      onFinish={handleFinishSwiping}
-    />
+    <>
+      <MovieSwiper
+        movies={movies}
+        onLike={onLike}
+        onDislike={onDislike}
+        onWatch={onWatch}
+        onFinish={handleFinishSwiping}
+      />
+      
+      {showGameRating && (
+        <GameRatingModal
+          movies={movies}
+          onSubmit={handleSubmitRating}
+          onSkip={handleSkipRating}
+        />
+      )}
+    </>
   );
 };
 
