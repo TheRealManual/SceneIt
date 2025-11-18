@@ -30,6 +30,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
   const [loading, setLoading] = useState(true);
   const [showGameRating, setShowGameRating] = useState(false);
   const [shouldShowRating, setShouldShowRating] = useState(false);
+  const [searchPreferences, setSearchPreferences] = useState<any>(null);
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
@@ -49,6 +50,9 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
         navigate('/');
         return;
       }
+
+      // Store preferences for later use in rating submission
+      setSearchPreferences(preferences);
 
       // MovieSwiper always fetches fresh search results (no caching)
 
@@ -129,8 +133,8 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
         navigate('/');
       } finally {
         setLoading(false);
-        // 50% chance to show rating modal
-        setShouldShowRating(Math.random() < 0.5);
+        // Always show rating modal
+        setShouldShowRating(true);
       }
     };
 
@@ -158,7 +162,8 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
         body: JSON.stringify({
           overallRating: rating,
           movieFeedback: movieFeedback,
-          gameMovies: movies.map(m => m.tmdbId)
+          gameMovies: movies.map(m => m.tmdbId),
+          searchPreferences: searchPreferences
         })
       });
 

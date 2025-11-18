@@ -65,7 +65,7 @@ const GameRatingModal: React.FC<GameRatingModalProps> = ({ movies, onSubmit, onS
 
         {/* Movie Feedback List */}
         <div className="movie-feedback-section">
-          <p className="rating-label">Rate Each Movie</p>
+          <p className="rating-label">Rate Each Recommendation</p>
           <div className="movie-feedback-list">
             {movies.map((movie) => (
               <div key={movie.tmdbId} className="movie-feedback-item">
