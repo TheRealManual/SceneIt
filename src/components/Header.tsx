@@ -15,6 +15,7 @@ interface HeaderProps {
   onViewDislikedMovies?: () => void;
   onPreloadLikedMovies?: () => void;
   onPreloadDislikedMovies?: () => void;
+  onViewFriends?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -27,7 +28,8 @@ const Header: React.FC<HeaderProps> = ({
   onViewLikedMovies,
   onViewDislikedMovies,
   onPreloadLikedMovies,
-  onPreloadDislikedMovies
+  onPreloadDislikedMovies,
+  onViewFriends
 }) => {
   return (
     <header className="App-header">
@@ -52,6 +54,12 @@ const Header: React.FC<HeaderProps> = ({
                 onMouseEnter={onPreloadDislikedMovies}
               >
                 👎 Disliked Movies
+              </button>
+              <button 
+                className="header-nav-btn friends-btn" 
+                onClick={onViewFriends}
+              >
+                👥 Friends
               </button>
             </>
           )}

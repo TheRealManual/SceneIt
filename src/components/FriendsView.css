@@ -1,0 +1,257 @@
+.friends-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.friends-modal {
+  background: #1a1a2e;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+.friends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #16213e;
+}
+
+.friends-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #e94560;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  color: #888;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #e94560;
+}
+
+.friends-tabs {
+  display: flex;
+  border-bottom: 2px solid #16213e;
+  padding: 0 20px;
+  background: #16213e;
+}
+
+.friends-tabs button {
+  background: none;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #888;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.friends-tabs button:hover {
+  color: #fff;
+}
+
+.friends-tabs button.active {
+  color: #e94560;
+  border-bottom-color: #e94560;
+}
+
+.friends-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #16213e;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #0f1624;
+  color: white;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+.search-bar button {
+  padding: 12px 24px;
+  background: #e94560;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.search-bar button:hover {
+  background: #d63447;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #16213e;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.user-card:hover {
+  background: #1f2f4e;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #fff;
+}
+
+.user-email {
+  font-size: 13px;
+  color: #888;
+}
+
+.add-friend-btn {
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.add-friend-btn:hover {
+  background: #218838;
+}
+
+.remove-btn, .cancel-btn {
+  padding: 8px 16px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.remove-btn:hover, .cancel-btn:hover {
+  background: #c82333;
+}
+
+.request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.accept-btn {
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.accept-btn:hover {
+  background: #218838;
+}
+
+.decline-btn {
+  padding: 8px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.decline-btn:hover {
+  background: #5a6268;
+}
+
+.loading, .no-results {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+}
+
+.error-message {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border: 1px solid #dc3545;
+}

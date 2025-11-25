@@ -4,6 +4,7 @@ import './App.css'
 import Header from './components/Header'
 import ProfileModal from './components/ProfileModal'
 import AuthPromptModal from './components/AuthPromptModal'
+import { FriendsView } from './components/FriendsView'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import SummaryPage from './pages/SummaryPage'
@@ -51,6 +52,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showFriendsView, setShowFriendsView] = useState(false);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [favoriteMovieIds, setFavoriteMovieIds] = useState<Set<string>>(new Set());
   const [movieListRefreshTrigger, setMovieListRefreshTrigger] = useState(0);
@@ -620,6 +622,10 @@ function App() {
     navigate('/');
   };
 
+  const handleViewFriends = () => {
+    setShowFriendsView(true);
+  };
+
   // Preload liked movies on hover
   const handlePreloadLikedMovies = async () => {
     if (!user) return;
@@ -711,6 +717,7 @@ function App() {
         onViewDislikedMovies={handleViewDislikedMovies}
         onPreloadLikedMovies={handlePreloadLikedMovies}
         onPreloadDislikedMovies={handlePreloadDislikedMovies}
+        onViewFriends={handleViewFriends}
       />
 
       <Routes>
@@ -821,6 +828,13 @@ function App() {
       {showAuthPrompt && (
         <AuthPromptModal 
           onClose={() => setShowAuthPrompt(false)} 
+        />
+      )}
+
+      {/* Friends View Modal */}
+      {showFriendsView && (
+        <FriendsView 
+          onClose={() => setShowFriendsView(false)} 
         />
       )}
     </div>
