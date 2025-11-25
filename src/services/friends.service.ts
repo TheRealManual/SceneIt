@@ -4,7 +4,7 @@ export interface User {
   _id: string;
   displayName: string;
   email: string;
-  profilePhoto?: string;
+  photo?: string;
 }
 
 export interface FriendRequest {

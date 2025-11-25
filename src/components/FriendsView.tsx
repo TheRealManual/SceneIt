@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { friendsService, User, FriendRequest } from '../services/friends.service';
 import './FriendsView.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 type TabType = 'friends' | 'received' | 'sent' | 'search';
 
 export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -13,6 +15,27 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load all data on mount and whenever data changes
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
+  const loadAllData = async () => {
+    try {
+      const [friendsData, receivedData, sentData] = await Promise.all([
+        friendsService.getFriendsList(),
+        friendsService.getReceivedRequests(),
+        friendsService.getSentRequests()
+      ]);
+      
+      setFriends(friendsData.friends);
+      setReceivedRequests(receivedData.requests);
+      setSentRequests(sentData.requests);
+    } catch (err) {
+      console.error('Error loading friends data:', err);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -70,7 +93,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const acceptRequest = async (requestId: string) => {
     try {
       await friendsService.acceptRequest(requestId);
-      loadData();
+      await loadAllData();
     } catch (err) {
       alert('Failed to accept request');
     }
@@ -79,7 +102,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const declineRequest = async (requestId: string) => {
     try {
       await friendsService.declineRequest(requestId);
-      loadData();
+      await loadAllData();
     } catch (err) {
       alert('Failed to decline request');
     }
@@ -88,7 +111,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const cancelRequest = async (requestId: string) => {
     try {
       await friendsService.cancelRequest(requestId);
-      loadData();
+      await loadAllData();
     } catch (err) {
       alert('Failed to cancel request');
     }
@@ -98,7 +121,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     if (!confirm('Are you sure you want to remove this friend?')) return;
     try {
       await friendsService.removeFriend(friendId);
-      loadData();
+      await loadAllData();
     } catch (err) {
       alert('Failed to remove friend');
     }
@@ -162,7 +185,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   {searchResults.map(user => (
                     <div key={user._id} className="user-card">
                       <img 
-                        src={user.profilePhoto || 'https://via.placeholder.com/48'} 
+                        src={`${API_URL}/api/proxy/photo/${user._id}`}
                         alt={user.displayName}
                         className="user-avatar"
                       />
@@ -196,7 +219,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 friends.map(friend => (
                   <div key={friend._id} className="user-card">
                     <img 
-                      src={friend.profilePhoto || 'https://via.placeholder.com/48'} 
+                      src={`${API_URL}/api/proxy/photo/${friend._id}`}
                       alt={friend.displayName}
                       className="user-avatar"
                     />
@@ -226,7 +249,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 receivedRequests.map(request => (
                   <div key={request._id} className="user-card">
                     <img 
-                      src={request.user.profilePhoto || 'https://via.placeholder.com/48'} 
+                      src={`${API_URL}/api/proxy/photo/${request.user._id}`}
                       alt={request.user.displayName}
                       className="user-avatar"
                     />
@@ -264,7 +287,7 @@ export const FriendsView: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 sentRequests.map(request => (
                   <div key={request._id} className="user-card">
                     <img 
-                      src={request.user.profilePhoto || 'https://via.placeholder.com/48'} 
+                      src={`${API_URL}/api/proxy/photo/${request.user._id}`}
                       alt={request.user.displayName}
                       className="user-avatar"
                     />
