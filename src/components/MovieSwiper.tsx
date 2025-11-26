@@ -203,7 +203,6 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
           onClick={() => handleSwipe('left')}
         >
           <span className="btn-icon">👎</span>
-          <span className="btn-label">Pass</span>
         </button>
 
         <div 
@@ -241,21 +240,18 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
               style={{ opacity: swipeDirection === 'right' ? 1 : Math.max(0, dragOffset.x / 200) }}
             >
               <span className="indicator-icon">❤️</span>
-              <span className="indicator-text">LIKE</span>
             </div>
             <div 
               className={`swipe-indicator dislike-indicator ${swipeDirection === 'left' ? 'active' : ''}`}
               style={{ opacity: swipeDirection === 'left' ? 1 : Math.max(0, -dragOffset.x / 200) }}
             >
               <span className="indicator-icon">👎</span>
-              <span className="indicator-text">PASS</span>
             </div>
             <div 
               className={`swipe-indicator watch-indicator ${swipeDirection === 'up' ? 'active' : ''}`}
               style={{ opacity: swipeDirection === 'up' ? 1 : Math.max(0, -dragOffset.y / 200) }}
             >
-              <span className="indicator-icon">👁️</span>
-              <span className="indicator-text">WATCHED</span>
+              <span className="indicator-icon">🎬</span>
             </div>
           </div>
 
@@ -308,7 +304,6 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
           onClick={() => handleSwipe('right')}
         >
           <span className="btn-icon">❤️</span>
-          <span className="btn-label">Like</span>
         </button>
 
         {/* Watched Button - positioned relative to the card */}
@@ -318,7 +313,6 @@ const MovieSwiper: React.FC<MovieSwiperProps> = ({ movies, onLike, onDislike, on
           onClick={() => handleSwipe('up')}
         >
           <span className="watched-icon">🎬</span>
-          <span className="watched-label">Watched</span>
         </button>
       </div>
 

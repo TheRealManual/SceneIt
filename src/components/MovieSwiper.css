@@ -322,11 +322,11 @@
 }
 
 .btn-icon {
-  font-size: clamp(1.6rem, 2.8vw, 2.1rem);
+  font-size: clamp(2.5rem, 2.8vw, 2.1rem);
 }
 
 .btn-label {
-  font-size: clamp(0.6rem, 1.1vw, 0.75rem);
+  font-size: clamp(2.5rem, 1.1vw, 0.75rem);
 }
 
 /* Watched Button */
@@ -364,8 +364,9 @@
   transform: translateX(-50%) scale(0.95);
 }
 
-.watched-icon {
-  font-size: clamp(1.6rem, 2.5vw, 2rem);
+/* Watched icon specifically for the game button */
+.watched-button .watched-icon {
+  font-size: 2.5rem;
 }
 
 .watched-label {
@@ -531,7 +532,7 @@
   }
 
   .watched-icon {
-    font-size: 1.3rem;
+    font-size: 2.5rem;
   }
 
   .watched-label {

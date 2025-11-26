@@ -711,11 +711,9 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
       {showSessionActions && onBackToHome && onKeepSearching && (
         <div className="disliked-movies-actions">
           <button className="action-button secondary" onClick={onBackToHome}>
-            <span className="button-icon">🏠</span>
             Start New Search
           </button>
           <button className="action-button primary" onClick={onKeepSearching}>
-            <span className="button-icon">🔍</span>
             Keep Searching
           </button>
         </div>

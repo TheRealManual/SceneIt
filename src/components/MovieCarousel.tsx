@@ -39,6 +39,7 @@ const MovieCarousel: React.FC<MovieCarouselProps> = ({
 }) => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailedMovie, setDetailedMovie] = useState<Movie | null>(null);
   const [localLikedIds, setLocalLikedIds] = useState<Set<string>>(new Set());
@@ -137,6 +138,40 @@ const MovieCarousel: React.FC<MovieCarouselProps> = ({
 
     fetchRandomMovies();
   }, []);
+
+  // Preload images after movies are loaded
+  useEffect(() => {
+    if (movies.length === 0) return;
+
+    let loadedCount = 0;
+    const totalImages = movies.length;
+    const imagePromises: Promise<void>[] = [];
+
+    movies.forEach((movie) => {
+      const promise = new Promise<void>((resolve) => {
+        const img = new Image();
+        img.src = getPosterUrl(movie.posterPath);
+        
+        img.onload = () => {
+          loadedCount++;
+          resolve();
+        };
+        
+        img.onerror = () => {
+          loadedCount++;
+          resolve(); // Still resolve to avoid blocking
+        };
+      });
+      
+      imagePromises.push(promise);
+    });
+
+    // Wait for all images to load
+    Promise.all(imagePromises).then(() => {
+      console.log(`🖼️ Preloaded ${loadedCount}/${totalImages} carousel images`);
+      setImagesLoaded(true);
+    });
+  }, [movies]);
 
   const getPosterUrl = (posterPath: string) => {
     if (!posterPath) return 'https://via.placeholder.com/500x750?text=No+Poster';
@@ -266,8 +301,8 @@ const MovieCarousel: React.FC<MovieCarouselProps> = ({
     }
   };
 
-  if (loading) {
-    return null; // Don't show anything while loading
+  if (loading || !imagesLoaded) {
+    return null; // Don't show anything while loading or preloading images
   }
 
   if (movies.length === 0) {
@@ -288,7 +323,6 @@ const MovieCarousel: React.FC<MovieCarouselProps> = ({
                 src={getPosterUrl(movie.posterPath)} 
                 alt={movie.title}
                 className="home-poster-image"
-                loading="lazy"
               />
               <div className="home-movie-overlay">
                 <h3 className="home-movie-title">{movie.title}</h3>

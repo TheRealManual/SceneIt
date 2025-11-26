@@ -79,12 +79,10 @@ function ProfileModal({ user, onClose, onClearLikedMovies, onClearDislikedMovies
             
             <div className="profile-actions">
               <button className="profile-action-btn clear-liked" onClick={handleClearLiked}>
-                <span className="action-icon">🗑️</span>
                 Clear Liked Movies
               </button>
               
               <button className="profile-action-btn clear-disliked" onClick={handleClearDisliked}>
-                <span className="action-icon">🗑️</span>
                 Clear Disliked Movies
               </button>
             </div>

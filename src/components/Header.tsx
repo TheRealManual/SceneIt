@@ -46,20 +46,20 @@ const Header: React.FC<HeaderProps> = ({
                 onClick={onViewLikedMovies}
                 onMouseEnter={onPreloadLikedMovies}
               >
-                ❤️ Liked Movies
+                Liked Movies
               </button>
               <button 
                 className="header-nav-btn disliked-btn" 
                 onClick={onViewDislikedMovies}
                 onMouseEnter={onPreloadDislikedMovies}
               >
-                👎 Disliked Movies
+                Disliked Movies
               </button>
               <button 
                 className="header-nav-btn friends-btn" 
                 onClick={onViewFriends}
               >
-                👥 Friends
+                Friends
               </button>
             </>
           )}

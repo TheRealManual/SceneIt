@@ -624,7 +624,7 @@ const HomePage: React.FC<HomePageProps> = ({
             onMouseLeave={handlePreloadCancel}
             className="dev-button"
           >
-            🧪 Find My Movies (Dev)
+            Find My Movies (Dev)
           </button>
           <button 
             onClick={handleSubmitPreferences} 

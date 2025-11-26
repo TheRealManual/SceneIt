@@ -101,14 +101,12 @@ const RatingModal: React.FC<RatingModalProps> = ({
                 onClick={() => setPreference('like')}
               >
                 <span className="preference-icon">❤️</span>
-                <span className="preference-text">Like</span>
               </button>
               <button
                 className={`preference-button preference-dislike ${preference === 'dislike' ? 'selected' : ''}`}
                 onClick={() => setPreference('dislike')}
               >
                 <span className="preference-icon">👎</span>
-                <span className="preference-text">Dislike</span>
               </button>
             </div>
           </div>

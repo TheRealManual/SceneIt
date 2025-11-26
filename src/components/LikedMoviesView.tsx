@@ -744,7 +744,7 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
         {filteredFavorites.length > 0 && (
           <div className="favorites-section">
             <div className="section-header">
-              <h2 className="section-title">⭐ Your Favorite Movies</h2>
+              <h2 className="section-title">Your Favorite Movies</h2>
               <p className="section-count">{filteredFavorites.length} {filteredFavorites.length === 1 ? 'favorite' : 'favorites'}</p>
             </div>
 
@@ -820,7 +820,7 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
         {/* Liked Movies Section */}
         <div className="liked-section">
           <div className="section-header">
-            <h2 className="section-title">❤️ Movies You Liked</h2>
+            <h2 className="section-title">Movies You Liked</h2>
             <p className="section-count">{filteredMovies.length} {filteredMovies.length === 1 ? 'movie' : 'movies'}</p>
           </div>
 
@@ -903,7 +903,7 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
         {dislikedMovies.length > 0 && (
           <div className="disliked-section">
             <div className="section-header">
-              <h2 className="section-title">👎 Movies You Disliked</h2>
+              <h2 className="section-title">Movies You Disliked</h2>
               <p className="section-count">{dislikedMovies.length} {dislikedMovies.length === 1 ? 'movie' : 'movies'}</p>
             </div>
 
@@ -950,11 +950,9 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
       {showSessionActions && onBackToHome && onKeepSearching && (
         <div className="liked-movies-actions">
           <button className="action-button secondary" onClick={onBackToHome}>
-            <span className="button-icon">🏠</span>
             Start New Search
           </button>
           <button className="action-button primary" onClick={onKeepSearching}>
-            <span className="button-icon">🔍</span>
             Keep Searching
           </button>
         </div>
