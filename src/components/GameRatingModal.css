@@ -168,6 +168,16 @@
   object-fit: cover;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.movie-feedback-poster.clickable {
+  cursor: pointer;
+}
+
+.movie-feedback-poster.clickable:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 12px rgba(102, 126, 234, 0.5);
 }
 
 .movie-feedback-title {

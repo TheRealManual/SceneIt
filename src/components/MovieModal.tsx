@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './MovieModal.css';
 import RatingModal from './RatingModal';
 import StarRating from './StarRating';
+import { friendsService, User } from '../services/friends.service';
 
 interface Movie {
   tmdbId: number;
@@ -12,6 +13,31 @@ interface Movie {
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
   runtime?: number;
+  videos?: Array<{
+    key: string;
+    name: string;
+    site: string;
+    type: string;
+    official: boolean;
+  }>;
+  watchProviders?: {
+    link?: string;
+    flatrate?: Array<{
+      providerId: number;
+      providerName: string;
+      logoPath: string;
+    }>;
+    rent?: Array<{
+      providerId: number;
+      providerName: string;
+      logoPath: string;
+    }>;
+    buy?: Array<{
+      providerId: number;
+      providerName: string;
+      logoPath: string;
+    }>;
+  };
 }
 
 interface MovieModalProps {
@@ -54,6 +80,16 @@ const MovieModal: React.FC<MovieModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hoveredWatchedButton, setHoveredWatchedButton] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const [shareSuccess, setShareSuccess] = useState(false);
+  const [friends, setFriends] = useState<User[]>([]);
+  const [selectedFriend, setSelectedFriend] = useState<string>('');
+  const [shareMode, setShareMode] = useState<'friend' | 'email'>('friend');
+  const [showWatchProviders, setShowWatchProviders] = useState(false);
 
   // Prevent body scroll when modal is open and scroll to top
   useEffect(() => {
@@ -164,6 +200,95 @@ const MovieModal: React.FC<MovieModalProps> = ({
     onClose();
   };
 
+  const handleShareClick = async () => {
+    setShowShareDialog(true);
+    setShareEmail('');
+    setShareMessage('');
+    setShareError('');
+    setShareSuccess(false);
+    setSelectedFriend('');
+    
+    // Fetch friends list
+    try {
+      const { friends: friendsList } = await friendsService.getFriendsList();
+      setFriends(friendsList);
+      if (friendsList.length > 0) {
+        setShareMode('friend');
+      } else {
+        setShareMode('email');
+      }
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+      setFriends([]);
+      setShareMode('email');
+    }
+  };
+
+  const handleShareSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setShareError('');
+    setShareLoading(true);
+
+    try {
+      const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      
+      // Determine recipient email
+      let recipientEmail = shareEmail;
+      if (shareMode === 'friend' && selectedFriend) {
+        const friend = friends.find(f => f._id === selectedFriend);
+        if (friend) {
+          recipientEmail = friend.email;
+        } else {
+          setShareError('Please select a friend');
+          setShareLoading(false);
+          return;
+        }
+      } else if (shareMode === 'email' && !shareEmail) {
+        setShareError('Please enter an email address');
+        setShareLoading(false);
+        return;
+      }
+      
+      const response = await fetch(`${API_URL}/api/movies/${movie.tmdbId}/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          recipientEmail,
+          personalMessage: shareMessage,
+        }),
+      });
+
+      if (response.ok) {
+        setShareSuccess(true);
+        setTimeout(() => {
+          setShowShareDialog(false);
+          setShareSuccess(false);
+        }, 2000);
+      } else {
+        const error = await response.json();
+        setShareError(error.error || 'Failed to send email');
+      }
+    } catch (error) {
+      setShareError('Network error. Please try again.');
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  // Get trailer video (prefer official trailers)
+  const trailer = movie.videos?.find(
+    (v) => v.type === 'Trailer' && v.site === 'YouTube' && v.official
+  ) || movie.videos?.find((v) => v.type === 'Trailer' && v.site === 'YouTube');
+
+  // Get all streaming providers (US region)
+  const streamingProviders = movie.watchProviders?.US?.flatrate || movie.watchProviders?.flatrate || [];
+  const rentProviders = movie.watchProviders?.US?.rent || movie.watchProviders?.rent || [];
+  const buyProviders = movie.watchProviders?.US?.buy || movie.watchProviders?.buy || [];
+  const hasProviders = streamingProviders.length > 0 || rentProviders.length > 0 || buyProviders.length > 0;
+
   return (
     <div className="movie-modal-overlay" onClick={handleBackdropClick}>
       <div className="movie-modal-content" onClick={handleContentClick}>
@@ -172,7 +297,105 @@ const MovieModal: React.FC<MovieModalProps> = ({
         </button>
 
         <div className="modal-movie-card">
-          {/* Dislike Button - Top Left */}
+          {/* Where to Watch Button - Top Left */}
+          {hasProviders && (
+            <div className="modal-watch-button-container">
+              <button
+                className="modal-watch-button"
+                onClick={() => setShowWatchProviders(!showWatchProviders)}
+                title="Where to watch"
+              >
+                <span className="modal-btn-icon">📺</span>
+              </button>
+              
+              {/* Dropdown */}
+              {showWatchProviders && (
+                <div className="modal-watch-dropdown">
+                  <h4 className="modal-watch-dropdown-title">Where to Watch</h4>
+                  
+                  {streamingProviders.length > 0 && (
+                    <div className="modal-provider-category">
+                      <div className="modal-provider-label">Stream</div>
+                      <div className="modal-provider-grid">
+                        {streamingProviders.map((provider: any) => (
+                          <a
+                            key={provider.providerId}
+                            href={provider.directUrl || movie.watchProviders?.US?.link || movie.watchProviders?.link || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="modal-provider-item"
+                            title={provider.providerName}
+                          >
+                            <img
+                              src={`https://image.tmdb.org/t/p/original${provider.logoPath}`}
+                              alt={provider.providerName}
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {rentProviders.length > 0 && (
+                    <div className="modal-provider-category">
+                      <div className="modal-provider-label">Rent</div>
+                      <div className="modal-provider-grid">
+                        {rentProviders.map((provider: any) => (
+                          <a
+                            key={provider.providerId}
+                            href={provider.directUrl || movie.watchProviders?.US?.link || movie.watchProviders?.link || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="modal-provider-item"
+                            title={provider.providerName}
+                          >
+                            <img
+                              src={`https://image.tmdb.org/t/p/original${provider.logoPath}`}
+                              alt={provider.providerName}
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {buyProviders.length > 0 && (
+                    <div className="modal-provider-category">
+                      <div className="modal-provider-label">Buy</div>
+                      <div className="modal-provider-grid">
+                        {buyProviders.map((provider: any) => (
+                          <a
+                            key={provider.providerId}
+                            href={provider.directUrl || movie.watchProviders?.US?.link || movie.watchProviders?.link || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="modal-provider-item"
+                            title={provider.providerName}
+                          >
+                            <img
+                              src={`https://image.tmdb.org/t/p/original${provider.logoPath}`}
+                              alt={provider.providerName}
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Share Button - Top Left */}
+          <button
+            className="modal-share-button"
+            onClick={handleShareClick}
+            title="Share this movie"
+          >
+            <span className="modal-btn-icon">✉️</span>
+          </button>
+
+          {/* Dislike Button - Top Left (next to share) */}
           <button
             className={`modal-dislike-button ${localIsDisliked ? 'disliked' : ''} ${isProcessing ? 'processing' : ''}`}
             onClick={handleDislike}
@@ -264,6 +487,21 @@ const MovieModal: React.FC<MovieModalProps> = ({
             )}
 
             <p className="modal-movie-overview">{movie.overview}</p>
+
+            {/* Trailer Section */}
+            {trailer && (
+              <div className="modal-trailer-section">
+                <h3 className="modal-section-title">🎬 Trailer</h3>
+                <div className="modal-trailer-container">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${trailer.key}`}
+                    title={trailer.name}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Rating Modal - inside card for proper positioning */}
@@ -276,6 +514,110 @@ const MovieModal: React.FC<MovieModalProps> = ({
                 onClose={handleRatingCancel}
                 showPreference={!localIsLiked && !localIsDisliked}
               />
+            </div>
+          )}
+
+          {/* Share Dialog */}
+          {showShareDialog && (
+            <div className="modal-share-dialog-overlay" onClick={() => setShowShareDialog(false)}>
+              <div className="modal-share-dialog" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="modal-share-dialog-close"
+                  onClick={() => setShowShareDialog(false)}
+                >
+                  ✕
+                </button>
+
+                <h3 className="modal-share-dialog-title">✉️ Share "{movie.title}"</h3>
+
+                {shareSuccess ? (
+                  <div className="modal-share-success">
+                    <span className="modal-share-success-icon">✅</span>
+                    <p>Email sent successfully!</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleShareSubmit} className="modal-share-form">
+                    {/* Mode Toggle */}
+                    {friends.length > 0 && (
+                      <div className="modal-share-mode-toggle">
+                        <button
+                          type="button"
+                          className={`modal-share-mode-btn ${shareMode === 'friend' ? 'active' : ''}`}
+                          onClick={() => setShareMode('friend')}
+                        >
+                          Select Friend
+                        </button>
+                        <button
+                          type="button"
+                          className={`modal-share-mode-btn ${shareMode === 'email' ? 'active' : ''}`}
+                          onClick={() => setShareMode('email')}
+                        >
+                          Enter Email
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Friend Selector */}
+                    {shareMode === 'friend' ? (
+                      <div className="modal-share-field">
+                        <label htmlFor="friendSelect">Select Friend</label>
+                        <select
+                          id="friendSelect"
+                          value={selectedFriend}
+                          onChange={(e) => setSelectedFriend(e.target.value)}
+                          required
+                          disabled={shareLoading}
+                          className="modal-share-select"
+                        >
+                          <option value="">Choose a friend...</option>
+                          {friends.map((friend) => (
+                            <option key={friend._id} value={friend._id}>
+                              {friend.displayName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="modal-share-field">
+                        <label htmlFor="shareEmail">Recipient Email</label>
+                        <input
+                          id="shareEmail"
+                          type="email"
+                          value={shareEmail}
+                          onChange={(e) => setShareEmail(e.target.value)}
+                          placeholder="friend@example.com"
+                          required
+                          disabled={shareLoading}
+                        />
+                      </div>
+                    )}
+
+                    <div className="modal-share-field">
+                      <label htmlFor="shareMessage">Personal Message (Optional)</label>
+                      <textarea
+                        id="shareMessage"
+                        value={shareMessage}
+                        onChange={(e) => setShareMessage(e.target.value)}
+                        placeholder="I think you'll love this movie!"
+                        rows={3}
+                        disabled={shareLoading}
+                      />
+                    </div>
+
+                    {shareError && (
+                      <div className="modal-share-error">{shareError}</div>
+                    )}
+
+                    <button
+                      type="submit"
+                      className="modal-share-submit"
+                      disabled={shareLoading}
+                    >
+                      {shareLoading ? 'Sending...' : 'Send Recommendation'}
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           )}
         </div>

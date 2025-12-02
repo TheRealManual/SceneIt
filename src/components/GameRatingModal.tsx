@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './GameRatingModal.css';
+import MovieModal from './MovieModal';
 
 interface Movie {
   tmdbId: number;
@@ -17,6 +18,8 @@ const GameRatingModal: React.FC<GameRatingModalProps> = ({ movies, onSubmit, onS
   const [overallRating, setOverallRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [movieFeedback, setMovieFeedback] = useState<{ [movieId: number]: 'good' | 'bad' }>({});
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleStarClick = (rating: number) => {
     setOverallRating(rating);
@@ -27,6 +30,36 @@ const GameRatingModal: React.FC<GameRatingModalProps> = ({ movies, onSubmit, onS
       ...prev,
       [movieId]: prev[movieId] === feedback ? undefined : feedback
     } as { [movieId: number]: 'good' | 'bad' }));
+  };
+
+  const handleMovieClick = async (movie: Movie) => {
+    console.log('🎬 Clicked movie from game:', movie.title);
+    
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/movies/${movie.tmdbId}`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const movieDetails = data.movie || data;
+        setSelectedMovie(movieDetails);
+        setIsModalOpen(true);
+      } else {
+        setSelectedMovie(movie);
+        setIsModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Error fetching movie details:', error);
+      setSelectedMovie(movie);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMovie(null);
   };
 
   const allMoviesRated = movies.every(movie => movieFeedback[movie.tmdbId]);
@@ -72,7 +105,8 @@ const GameRatingModal: React.FC<GameRatingModalProps> = ({ movies, onSubmit, onS
                 <img 
                   src={`https://image.tmdb.org/t/p/w92${movie.posterPath}`}
                   alt={movie.title}
-                  className="movie-feedback-poster"
+                  className="movie-feedback-poster clickable"
+                  onClick={() => handleMovieClick(movie)}
                 />
                 <span className="movie-feedback-title">{movie.title}</span>
                 <div className="movie-feedback-buttons">
@@ -115,6 +149,19 @@ const GameRatingModal: React.FC<GameRatingModalProps> = ({ movies, onSubmit, onS
           </button>
         </div>
       </div>
+
+      {/* Movie Details Modal */}
+      {selectedMovie && (
+        <MovieModal
+          movie={selectedMovie}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onLike={() => {}}
+          onDislike={() => {}}
+          isLiked={false}
+          isDisliked={false}
+        />
+      )}
     </div>
   );
 };

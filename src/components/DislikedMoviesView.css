@@ -267,6 +267,15 @@
   display: block;
   aspect-ratio: 2/3;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.movie-poster.clickable {
+  cursor: pointer;
+}
+
+.movie-poster.clickable:hover {
+  transform: scale(1.08);
 }
 
 .movie-overlay {

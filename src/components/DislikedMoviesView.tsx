@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import './DislikedMoviesView.css';
 import StarRating from './StarRating';
 import RatingModal from './RatingModal';
+import MovieModal from './MovieModal';
 
 interface Movie {
   tmdbId: number;
@@ -56,6 +57,8 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
   const [ratingMovieTitle, setRatingMovieTitle] = useState<string>('');
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [hoveredWatchedButton, setHoveredWatchedButton] = useState<string | null>(null);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch watched movies on mount
   useEffect(() => {
@@ -373,6 +376,50 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
     }
   };
 
+  const handleMovieClick = async (movie: Movie) => {
+    console.log('🎬 Clicked movie:', movie.title, 'tmdbId:', movie.tmdbId);
+    
+    // Fetch full movie details
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/movies/${movie.tmdbId}`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const movieDetails = data.movie || data;
+        console.log('✅ Fetched movie details:', movieDetails);
+        
+        setSelectedMovie(movieDetails);
+        setIsModalOpen(true);
+      } else {
+        console.error('❌ Failed to fetch movie details');
+        setSelectedMovie(movie);
+        setIsModalOpen(true);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching movie details:', error);
+      setSelectedMovie(movie);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMovie(null);
+  };
+
+  const handleModalLike = async (movie: Movie) => {
+    await handleMoveToLiked(movie);
+    handleCloseModal();
+  };
+
+  const handleModalDislike = async (movie: Movie) => {
+    // Already in disliked list
+    console.log('Movie already disliked:', movie.title);
+  };
+
   return (
     <div className="disliked-movies-view">
       {/* Filter Sidebar - only show if showFilters is true */}
@@ -668,7 +715,8 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
                 <img
                   src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
                   alt={movie.title}
-                  className="movie-poster"
+                  className="movie-poster clickable"
+                  onClick={() => handleMovieClick(movie)}
                 />
                 <div className="movie-overlay">
                   <h3 className="movie-title">{movie.title}</h3>
@@ -726,6 +774,24 @@ const DislikedMoviesView: React.FC<DislikedMoviesViewProps> = ({
           initialRating={currentRating}
           onSubmit={handleRatingSubmit}
           onClose={() => setShowRatingModal(false)}
+        />
+      )}
+
+      {/* Movie Details Modal */}
+      {selectedMovie && (
+        <MovieModal
+          movie={selectedMovie}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onLike={handleModalLike}
+          onDislike={handleModalDislike}
+          onWatch={onWatch}
+          onUnwatch={onUnwatch}
+          onUpdateWatchedRating={onUpdateWatchedRating}
+          isLiked={false}
+          isDisliked={true}
+          userRating={selectedMovie.userRating || watchedMovies.get(selectedMovie.tmdbId.toString())}
+          averageRating={selectedMovie.averageRating}
         />
       )}
     </div>

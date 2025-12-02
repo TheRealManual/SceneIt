@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import './LikedMoviesView.css';
 import StarRating from './StarRating';
 import RatingModal from './RatingModal';
+import MovieModal from './MovieModal';
 
 interface Movie {
   tmdbId: number;
@@ -69,6 +70,8 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
   const [ratingMovieTitle, setRatingMovieTitle] = useState<string>('');
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [hoveredWatchedButton, setHoveredWatchedButton] = useState<string | null>(null);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Filter states
   const [selectedGenres, setSelectedGenres] = useState<Set<string>>(new Set());
@@ -395,6 +398,56 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
         });
       }, 600);
     }
+  };
+
+  const handleMovieClick = async (movie: Movie) => {
+    console.log('🎬 Clicked movie:', movie.title, 'tmdbId:', movie.tmdbId);
+    
+    // Fetch full movie details
+    try {
+      const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+      const response = await fetch(`${backendUrl}/api/movies/${movie.tmdbId}`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const movieDetails = data.movie || data;
+        console.log('✅ Fetched movie details:', movieDetails);
+        
+        setSelectedMovie(movieDetails);
+        setIsModalOpen(true);
+      } else {
+        console.error('❌ Failed to fetch movie details');
+        // Fallback to basic movie info
+        setSelectedMovie(movie);
+        setIsModalOpen(true);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching movie details:', error);
+      // Fallback to basic movie info
+      setSelectedMovie(movie);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMovie(null);
+  };
+
+  const handleModalLike = async (movie: Movie) => {
+    // Already in liked list, no action needed
+    console.log('Movie already liked:', movie.title);
+  };
+
+  const handleModalDislike = async (movie: Movie) => {
+    await handleMoveToDisliked(movie);
+    handleCloseModal();
+  };
+
+  const handleModalFavorite = async (movie: Movie) => {
+    await handleFavoriteClick(movie);
   };
 
   const handleWatchClick = (movie: Movie) => {
@@ -764,7 +817,8 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
                       <img
                         src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
                         alt={movie.title}
-                        className="movie-poster"
+                        className="movie-poster clickable"
+                        onClick={() => handleMovieClick(movie)}
                       />
                       <div className="movie-overlay">
                         <h3 className="movie-title">{movie.title}</h3>
@@ -841,7 +895,8 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
                 <img
                   src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
                   alt={movie.title}
-                  className="movie-poster"
+                  className="movie-poster clickable"
+                  onClick={() => handleMovieClick(movie)}
                 />
                 <div className="movie-overlay">
                   <h3 className="movie-title">{movie.title}</h3>
@@ -919,7 +974,8 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
                       <img
                         src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
                         alt={movie.title}
-                        className="movie-poster"
+                        className="movie-poster clickable"
+                        onClick={() => handleMovieClick(movie)}
                       />
                       <div className="movie-overlay">
                         <h3 className="movie-title">{movie.title}</h3>
@@ -971,6 +1027,26 @@ const LikedMoviesView: React.FC<LikedMoviesViewProps> = ({
             setRatingMovieTitle('');
             setCurrentRating(0);
           }}
+        />
+      )}
+
+      {/* Movie Details Modal */}
+      {selectedMovie && (
+        <MovieModal
+          movie={selectedMovie}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onLike={handleModalLike}
+          onDislike={handleModalDislike}
+          onFavorite={handleModalFavorite}
+          onWatch={onWatch}
+          onUnwatch={onUnwatch}
+          onUpdateWatchedRating={onUpdateWatchedRating}
+          isLiked={true}
+          isDisliked={false}
+          isFavorited={favoriteMovieIds.has(selectedMovie.tmdbId.toString())}
+          userRating={selectedMovie.userRating || watchedMovies.get(selectedMovie.tmdbId.toString())}
+          averageRating={selectedMovie.averageRating}
         />
       )}
     </div>
