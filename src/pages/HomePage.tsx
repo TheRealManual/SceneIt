@@ -4,6 +4,7 @@ import { User } from '../types/user';
 import { userService } from '../services/user.service';
 import { movieCacheService } from '../services/movieCache.service';
 import MovieCarousel from '../components/MovieCarousel';
+import ErrorModal from '../components/ErrorModal';
 
 interface MoviePreferences {
   description: string;
@@ -60,6 +61,7 @@ const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isPreloading, setIsPreloading] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const preloadAbortController = useRef<AbortController | null>(null);
 
   const handleClearPreferences = () => {
@@ -179,6 +181,13 @@ const HomePage: React.FC<HomePageProps> = ({
           signal: preloadAbortController.current.signal
         });
         
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          if (response.status === 503 && data.code === 'TMDB_UNAVAILABLE') {
+            throw new Error('TMDB_UNAVAILABLE');
+          }
+        }
+        
         if (response.ok) {
           const data = await response.json();
           
@@ -221,6 +230,13 @@ const HomePage: React.FC<HomePageProps> = ({
           signal: preloadAbortController.current.signal
         });
         
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          if (response.status === 503 && data.code === 'TMDB_UNAVAILABLE') {
+            throw new Error('TMDB_UNAVAILABLE');
+          }
+        }
+        
         if (response.ok) {
           const data = await response.json();
           
@@ -238,7 +254,11 @@ const HomePage: React.FC<HomePageProps> = ({
       }
     } catch (error: any) {
       if (error.name !== 'AbortError') {
-        console.log('Preload error (will load normally):', error);
+        if (error.message === 'TMDB_UNAVAILABLE') {
+          console.error('TMDB API unavailable during preload');
+        } else {
+          console.log('Preload error (will load normally):', error);
+        }
       }
     } finally {
       setIsPreloading(false);
@@ -636,6 +656,16 @@ const HomePage: React.FC<HomePageProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Error Modal for TMDB unavailability */}
+      {showErrorModal && (
+        <ErrorModal
+          onClose={() => setShowErrorModal(false)}
+          title="Service Unavailable"
+          message="The movie database is temporarily unavailable. Please try again in a moment."
+          icon="⚠️"
+        />
+      )}
     </main>
   );
 };

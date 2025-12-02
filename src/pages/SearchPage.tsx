@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import MovieSwiper from '../components/MovieSwiper';
 import GameRatingModal from '../components/GameRatingModal';
 import LoadingScreen from '../components/LoadingScreen';
+import ErrorModal from '../components/ErrorModal';
 import { User } from '../types/user';
 
 interface Movie {
@@ -31,6 +32,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
   const [showGameRating, setShowGameRating] = useState(false);
   const [shouldShowRating, setShouldShowRating] = useState(false);
   const [searchPreferences, setSearchPreferences] = useState<any>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const hasFetchedRef = useRef(false);
 
   useEffect(() => {
@@ -70,6 +72,18 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
           // Wait minimum 2 seconds for loading screen
           await new Promise(resolve => setTimeout(resolve, 2000));
           
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 503 && data.code === 'TMDB_UNAVAILABLE') {
+              setLoading(false);
+              setShowErrorModal(true);
+              return;
+            }
+            alert('Failed to fetch random movies. Please try again.');
+            navigate('/');
+            return;
+          }
+          
           if (response.ok) {
             const data = await response.json();
             
@@ -83,9 +97,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
               alert('No movies found.');
               navigate('/');
             }
-          } else {
-            alert('Failed to fetch random movies. Please try again.');
-            navigate('/');
           }
         } else {
           // Normal mode: AI-powered search
@@ -113,6 +124,18 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
             body: JSON.stringify(searchPayload)
           });
           
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 503 && data.code === 'TMDB_UNAVAILABLE') {
+              setLoading(false);
+              setShowErrorModal(true);
+              return;
+            }
+            alert('Failed to find movies. Please try again.');
+            navigate('/');
+            return;
+          }
+          
           if (response.ok) {
             const data = await response.json();
             
@@ -122,15 +145,12 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
               alert('No movies found. Try different preferences.');
               navigate('/');
             }
-          } else {
-            alert('Failed to find movies. Please try again.');
-            navigate('/');
           }
         }
       } catch (error) {
         console.error('Error fetching movies:', error);
-        alert('Error connecting to server. Please check your connection.');
-        navigate('/');
+        setLoading(false);
+        setShowErrorModal(true);
       } finally {
         setLoading(false);
         // Always show rating modal
@@ -193,6 +213,18 @@ const SearchPage: React.FC<SearchPageProps> = ({ user, onLike, onDislike, onWatc
 
   return (
     <>
+      {showErrorModal && (
+        <ErrorModal
+          onClose={() => {
+            setShowErrorModal(false);
+            navigate('/');
+          }}
+          title="Service Unavailable"
+          message="The movie database is temporarily unavailable. Please try again in a moment."
+          icon="⚠️"
+        />
+      )}
+      
       <MovieSwiper
         movies={movies}
         onLike={onLike}
