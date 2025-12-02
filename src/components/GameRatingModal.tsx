@@ -6,6 +6,7 @@ interface Movie {
   tmdbId: number;
   title: string;
   posterPath: string;
+  overview?: string;
 }
 
 interface GameRatingModalProps {

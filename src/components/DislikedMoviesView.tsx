@@ -9,7 +9,7 @@ interface Movie {
   title: string;
   posterPath: string;
   releaseDate?: string;
-  overview: string;
+  overview?: string;
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
   ageRating?: string;

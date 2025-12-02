@@ -8,7 +8,7 @@ interface Movie {
   tmdbId: number;
   title: string;
   posterPath: string;
-  overview: string;
+  overview?: string;
   releaseDate?: string;
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
@@ -37,6 +37,24 @@ interface Movie {
       providerName: string;
       logoPath: string;
     }>;
+    US?: {
+      link?: string;
+      flatrate?: Array<{
+        providerId: number;
+        providerName: string;
+        logoPath: string;
+      }>;
+      rent?: Array<{
+        providerId: number;
+        providerName: string;
+        logoPath: string;
+      }>;
+      buy?: Array<{
+        providerId: number;
+        providerName: string;
+        logoPath: string;
+      }>;
+    };
   };
 }
 

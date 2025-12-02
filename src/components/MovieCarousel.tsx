@@ -7,7 +7,7 @@ interface Movie {
   tmdbId: number;
   title: string;
   posterPath: string;
-  overview: string;
+  overview?: string;
   releaseDate?: string;
   genres?: Array<{ id: number; name: string }>;
   voteAverage?: number;
